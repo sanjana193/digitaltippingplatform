@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up - TipSmart</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/b8d78448e3.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: #000;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h1 {
+      color: #ff004f;
+      margin-bottom: 20px;
+    }
+
+    form {
+      background-color: #1a1a1a;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 400px;
+      transition: all 0.3s ease-in-out;
+    }
+
+    form:hover {
+      transform: scale(1.05);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 25px;
+      background-color: #333;
+      color: #fff;
+      transition: all 0.3s ease-in-out;
+    }
+
+    input:focus {
+      background-color: #444;
+      outline: none;
+      box-shadow: 0 0 10px #ff004f;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #ff004f;
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #ff3366;
+      transform: scale(1.1);
+      box-shadow: 0 0 20px #ff004f;
+    }
+
+    .message {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+      font-weight: bold;
+    }
+
+    .message.success {
+      background-color: #28a745;
+    }
+
+    .message.error {
+      background-color: #dc3545;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sign Up</h1>
+  <form id="signup-form">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <label for="profile-photo">Profile Photo:</label>
+    <input type="file" id="profile-photo" name="profile-photo" accept="image/*" required>
+    <label for="loyaltyPoints">Loyalty Points:</label>
+    <input type="text" id="loyaltyPoints" name="loyaltyPoints" value="0" readonly>
+    <button type="submit">Sign Up</button>
+</form>
+
+  <script type="module" src="/scripts/auth.js"></script>
+</body>
+</html>
+
+
+
+  
+  

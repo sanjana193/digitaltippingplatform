@@ -1,0 +1,13 @@
+{
+  "name": "digitaltipping",
+  "version": "1.0.0",
+  "description": "TipSmart - A digital tipping platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "firebase-admin": "^12.2.0"
+  }
+}

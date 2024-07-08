@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiter Page</title>
+    <!-- Bootstrap CSS for styling (optional) -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        .waiter-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px;
+            width: 300px; /* Adjust width as needed */
+        }
+        .profile-pic {
+            width: 2in; /* 2 inches */
+            height: 2in; /* 2 inches */
+            border-radius: 8px;
+        }
+        .search-bar {
+            margin: 20px 0;
+        }
+        .message-form {
+            display: none; /* Initially hide message form */
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="mt-4 mb-4">Waiters Profiles
+            
+        </h2>
+        
+        <!-- Search Bar -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search waiters by name or restaurant..." onkeyup="searchWaiters()">
+        </div>
+
+        <!-- Waiters List -->
+        <div id="waitersList" class="row">
+            <!-- Waiters cards will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal for QR Code (Desktop) -->
+    <div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="qrCodeModalLabel">Scan QR Code to Send Tip</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <canvas id="modalQrCodeCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <!-- QR Code Generator -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
+            authDomain: "digitaltipping.firebaseapp.com",
+            projectId: "digitaltipping",
+            storageBucket: "digitaltipping.appspot.com",
+            messagingSenderId: "1028902624608",
+            appId: "1:1028902624608:web:101410a2bbd20316701205",
+            measurementId: "G-HHTG6R4CH6"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        const auth = firebase.auth();
+
+        // Authenticate user
+        auth.signInAnonymously().catch((error) => {
+            console.error('Authentication error:', error);
+        });
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                fetchWaitersWithPhotos();
+            } else {
+                console.error('User not authenticated');
+            }
+        });
+
+        // Function to fetch and display waiters with profile photos
+        function fetchWaitersWithPhotos() {
+            const waitersList = document.getElementById('waitersList');
+            waitersList.innerHTML = ''; // Clear previous content
+
+            db.collection('waiters').get()
+                .then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        const waiter = doc.data();
+                        const profilePicPath = waiter.profile; // Assuming 'profile' field stores the profile photo path
+
+                        // Create HTML for each waiter card
+                        const upiLink = `upi://pay?pa=${encodeURIComponent(waiter.paymentid)}&pn=${encodeURIComponent(waiter.name)}&cu=INR`;
+                        const waiterCard = document.createElement('div');
+                        waiterCard.classList.add('waiter-card', 'col-md-4'); // Bootstrap column for grid layout
+                        waiterCard.innerHTML = `
+                            <img id="profile-img-${doc.id}" alt="Profile Picture" class="profile-pic">
+                            <h3>${waiter.name}</h3>
+                            <p>Email: ${waiter.email}</p>
+                            <p>Restaurant: ${waiter.restaurant || 'Restaurant Name Not Provided'}</p>
+                            <div id="paymentButtons-${doc.id}">
+                                <!-- Payment buttons will be added here -->
+                            </div>
+                            <div class="mt-2">
+                                <button onclick="handlePayment('${upiLink}', '${doc.id}')">Pay Now</button>
+                                <button onclick="toggleMessageForm('${doc.id}')">Send Message</button>
+                                <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
+                                    <input type="text" name="message" class="form-control mb-2" placeholder="Message (optional)">
+                                    <button type="submit" class="btn btn-primary">Send</button>
+                                </form>
+                            </div>
+                        `;
+                        waitersList.appendChild(waiterCard);
+
+                        if (profilePicPath) {
+                            const profileImg = document.getElementById(`profile-img-${doc.id}`);
+                            storage.refFromURL(profilePicPath).getDownloadURL().then((url) => {
+                                profileImg.src = url;
+                            }).catch((error) => {
+                                console.error('Error fetching profile picture URL: ', error);
+                            });
+                        }
+                    });
+                })
+                .catch((error) => {
+                    console.error('Error fetching waiters with profile photos: ', error);
+                });
+        }
+
+        // Function to toggle message form visibility
+        function toggleMessageForm(waiterId) {
+            const messageForm = document.getElementById(`messageForm-${waiterId}`);
+            if (messageForm) {
+                messageForm.style.display = messageForm.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // Function to send message (example using mailto)
+        function sendMessage(event, email) {
+            event.preventDefault();
+            const form = event.target;
+            const message = form.elements.message.value;
+
+            // Construct the mailto URL with email and message
+            const mailtoUrl = `mailto:${email}?subject=Message%20from%20Customer&body=${encodeURIComponent(message)}`;
+
+            // Open the default email client
+            window.location.href = mailtoUrl;
+
+            form.reset(); // Reset form after submission
+        }
+
+        // Function to handle payment
+        function handlePayment(upiLink, waiterId) {
+            // Check if device is mobile
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                // Redirect to payment link (replace with actual payment gateway URL)
+                window.location.href = upiLink;
+            } else {
+                // Show QR code modal for desktop users
+                const modalQrCodeCanvas = document.getElementById('modalQrCodeCanvas');
+                modalQrCodeCanvas.width = 200;
+                modalQrCodeCanvas.height = 200;
+                const qr = new QRious({
+                    element: modalQrCodeCanvas,
+                    value: upiLink,
+                    size: 200
+                });
+                $('#qrCodeModal').modal('show');
+            }
+        }
+
+        // Function to search waiters by name or restaurant
+        function searchWaiters() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const waiterCards = document.getElementsByClassName('waiter-card');
+
+            for (let i = 0; i < waiterCards.length; i++) {
+                const card = waiterCards[i];
+                const name = card.getElementsByTagName('h3')[0].innerText.toLowerCase();
+                const restaurant = card.getElementsByTagName('p')[1].innerText.toLowerCase(); // Assuming restaurant is the second <p> tag
+
+                if (name.includes(filter) || restaurant.includes(filter)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
