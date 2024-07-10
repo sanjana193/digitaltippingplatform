@@ -4,9 +4,14 @@ const cors = require('cors'); // Import CORS middleware
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const corsOptions = {
+  origin: 'https://digitaltippingplatform.vercel.app/',
+  methods: ['GET', 'POST'], // Optional: Restrict which HTTP methods are allowed
+  allowedHeaders: ['Content-Type', 'Authorization'], // Optional: Specify which headers are allowed
+};
 
 // Middleware to allow cross-origin requests from all origins
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Middleware to set Content-Security-Policy header
 app.use((req, res, next) => {
