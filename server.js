@@ -5,8 +5,20 @@ const cors = require('cors'); // Import CORS middleware
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to allow cross-origin requests
+// Middleware to allow cross-origin requests from all origins
 app.use(cors());
+
+// Middleware to set Content-Security-Policy header
+app.use((req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src 'self'");
+  next();
+});
+
+// Middleware to set Strict-Transport-Security header
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload;');
+  next();
+});
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
