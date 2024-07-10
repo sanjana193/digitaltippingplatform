@@ -180,27 +180,28 @@
 
         // Function to handle payment
         function handlePayment(upiLink, waiterId) {
-    // Check if device is mobile
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    console.log('UPI Link:', upiLink); // Log the UPI link
-
-    if (isMobile) {
-        // Redirect to payment link (replace with actual payment gateway URL)
-        window.location.href = upiLink;
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    if (isAndroid) {
+        const intentLink = `intent://${upiLink.split('upi://')[1]}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end;`;
+        window.location.href = intentLink;
     } else {
-        // Show QR code modal for desktop users
-        const modalQrCodeCanvas = document.getElementById('modalQrCodeCanvas');
-        modalQrCodeCanvas.width = 200;
-        modalQrCodeCanvas.height = 200;
-        const qr = new QRious({
-            element: modalQrCodeCanvas,
-            value: upiLink,
-            size: 200
-        });
-        $('#qrCodeModal').modal('show');
+        const isMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+            window.location.href = upiLink;
+        } else {
+            const modalQrCodeCanvas = document.getElementById('modalQrCodeCanvas');
+            modalQrCodeCanvas.width = 200;
+            modalQrCodeCanvas.height = 200;
+            const qr = new QRious({
+                element: modalQrCodeCanvas,
+                value: upiLink,
+                size: 200
+            });
+            $('#qrCodeModal').modal('show');
+        }
     }
 }
+
 
 
         // Function to search waiters by name or restaurant
