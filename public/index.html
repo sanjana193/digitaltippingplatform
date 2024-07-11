@@ -5,10 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TipSmart</title>
   <link rel="stylesheet" href="styles.css">
+  <script nonce="<%= nonce %>">
+    function navigateTo(page) {
+      location.href = page;
+    }
+  </script>
 </head>
 <body>
   <h1>Welcome to TipSmart</h1>
-  <button onclick="location.href='signup.html'">Sign Up</button>
-  <button onclick="location.href='login.html'">Log In</button>
+  <button onclick="navigateTo('signup.html')">Sign Up</button>
+  <button onclick="navigateTo('login.html')">Log In</button>
 </body>
 </html>

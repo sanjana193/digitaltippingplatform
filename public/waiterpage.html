@@ -192,6 +192,7 @@
         function generateQRCode(upiLink, amount, waiterId) {
             const qrCodeCanvas = document.getElementById('modalQrCodeCanvas');
             const qrLink = `${upiLink}&am=${amount}`;
+            console.log('Generated UPI Link:', upiLink);
             const qr = new QRious({
                 element: qrCodeCanvas,
                 value: qrLink,
