@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up - TipSmart</title>
+  <title>Sign Up - EasyTip</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,6 +34,7 @@
       width: 100%;
       max-width: 400px;
       transition: all 0.3s ease-in-out;
+      text-align: left;
     }
 
     form:hover {
@@ -98,8 +99,8 @@
   </style>
 </head>
 <body>
-  <h1>Sign Up</h1>
   <form id="signup-form">
+    <h1>Sign Up</h1>
     <label for="name">Name:</label>
     <input type="text" id="name" name="name" required>
     <label for="email">Email:</label>
@@ -111,13 +112,8 @@
     <label for="loyaltyPoints">Loyalty Points:</label>
     <input type="text" id="loyaltyPoints" name="loyaltyPoints" value="0" readonly>
     <button type="submit">Sign Up</button>
-</form>
+  </form>
 
   <script type="module" src="/scripts/auth.js"></script>
 </body>
 </html>
-
-
-
-  
-  

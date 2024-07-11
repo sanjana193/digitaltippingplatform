@@ -3,12 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TipSmart</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>EasyTip</title>
+  <!-- Bootstrap CSS for styling (optional) -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <style>
+    body {
+      background-color: black;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    h1 {
+      color: #ff004f;
+      margin-bottom: 20px;
+    }
+    .btn-custom {
+      background-color: #ff004f;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      margin: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .btn-custom:hover {
+      background-color: #e60046;
+    }
+  </style>
 </head>
 <body>
-  <h1>Welcome to TipSmart</h1>
-  <button onclick="location.href='signup.html'">Sign Up</button>
-  <button onclick="location.href='login.html'">Log In</button>
+  <div>
+    <h1>EasyTip: <br>Revolutionizing Gratitude in the Digital Age</h1>
+    <button class="btn-custom" onclick="location.href='signup.html'">Sign Up</button>
+    <button class="btn-custom" onclick="location.href='login.html'">Log In</button>
+  </div>
+  <!-- Bootstrap JS (optional) -->
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
