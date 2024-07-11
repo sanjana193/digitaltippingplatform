@@ -1,5 +1,10 @@
+// Import Firebase modules
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js";
+
 // Firebase configuration
-var firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
   authDomain: "digitaltipping.firebaseapp.com",
   projectId: "digitaltipping",
@@ -10,72 +15,42 @@ var firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// Get references to Firebase services
-var auth = firebase.auth();
-var firestore = firebase.firestore();
-var storage = firebase.storage();
+// Fetch user profile data
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        const userId = user.uid;
+        const userDocRef = doc(db, 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            document.getElementById('user-name').textContent = userData.name;
+            document.getElementById('user-email').textContent = userData.email;
+            document.getElementById('points').textContent = `Points Earned: ${userData.loyaltyPoints}`;
 
-// Function to fetch user data from Firestore
-function fetchUserDataMenu() {
-  var userId = firebase.auth().currentUser.uid;
-  var docRef = firestore.collection("users").doc(userId);
-
-  docRef.get().then((doc) => {
-    if (doc.exists) {
-      var userData = doc.data();
-      console.log("User Data Retrieved:", userData);
-      updateProfileMenu(userData);
+            // Profile photo
+            const profilePhoto = document.getElementById('profile-photo');
+            if (userData.profilePhotoURL) {
+                profilePhoto.src = userData.profilePhotoURL;
+            }
+        } else {
+            console.log('No such document!');
+        }
     } else {
-      console.log("No such document!");
+        console.log('No user is signed in.');
     }
-  }).catch((error) => {
-    console.error("Error getting document:", error);
-  });
-}
-
-// Function to update profile section in HTML
-function updateProfileMenu(userData) {
-  var profilePhotoElement = document.getElementById("profile-photo");
-  var profileNameElement = document.getElementById("user-name");
-  var profileEmailElement = document.getElementById("user-email");
-  var loyaltyPointsElement = document.getElementById("loyaltyPoints");
-
-  console.log("Profile Photo Element:", profilePhotoElement); // Log profilePhotoElement
-  console.log("Profile Name Element:", profileNameElement); // Log profileNameElement
-  console.log("Profile Email Element:", profileEmailElement); // Log profileEmailElement
-  console.log("Loyalty Points Element:", loyaltyPointsElement); // Log loyaltyPointsElement
-
-  profilePhotoElement.src = userData.profilePhoto || "images/default-profile.png";
-  profileNameElement.textContent = userData.name || "Name";
-  profileEmailElement.textContent = userData.email || "Email";
-  loyaltyPointsElement.textContent = userData.loyaltyPoints || "0";
-}
-
-// Monitor authentication state changes
-auth.onAuthStateChanged(function(user) {
-  if (user) {
-    // User is signed in
-    console.log("User is signed in:", user.uid);
-    fetchUserDataMenu(); // Fetch user data
-  } else {
-    // No user is signed in
-    console.log("No user signed in.");
-    // Handle this case if necessary
-  }
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  const menuToggle = document.querySelector('.menu-toggle');
-  const profileSection = document.querySelector('#profile');
-  const closeProfileBtn = document.querySelector('.close-profile');
-
-  menuToggle.addEventListener('click', () => {
-    profileSection.classList.toggle('slide-in');
-  });
-
-  closeProfileBtn.addEventListener('click', () => {
-    profileSection.classList.remove('slide-in');
-  });
+// Log out function
+document.querySelector('.logout').addEventListener('click', async () => {
+    try {
+        await signOut(auth);
+        alert('User signed out successfully');
+        window.location.reload();  // Optionally, you can redirect the user to a login page
+    } catch (error) {
+        console.error('Error signing out:', error);
+    }
 });
