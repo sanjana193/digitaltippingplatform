@@ -102,6 +102,52 @@
         const auth = firebase.auth();
 
         // Function to fetch and display waiters with profile photos
+  
+
+        // Function to initiate payment (QR code for desktop, UPI link for mobile)
+        function initiatePayment(upiLink, waiterId) {
+            const amountInput = document.getElementById(`amount-${waiterId}`);
+            const amount = amountInput.value.trim();
+            if (!amount) {
+                alert('Please enter the amount.');
+                return;
+            }
+
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                // Open UPI link directly on mobile
+                window.location.href = `${upiLink}&am=${amount}`;
+                
+                 
+
+            } else {
+                // Generate QR code for desktop
+                generateQRCode(upiLink, amount, waiterId);
+                console.log('amount:', amount);
+            }
+
+            // Hide the payment form after payment initiated
+            const paymentForm = document.getElementById(`paymentForm-${waiterId}`);
+            if (paymentForm) {
+                paymentForm.style.display = 'none';
+            }
+        }
+
+        // Function to generate QR code
+        function generateQRCode(upiLink, amount, waiterId) {
+            const qrCodeCanvas = document.getElementById('modalQrCodeCanvas');
+            const qrLink = `${upiLink}&am=${amount}`;
+            console.log('Generated UPI Link:', upiLink);
+            const qr = new QRious({
+                element: qrCodeCanvas,
+                value: qrLink,
+                size: 300 // Adjust size as needed
+            });
+
+            // Show QR code modal
+            $('#qrCodeModal').modal('show');
+        }
+
         function fetchWaitersWithPhotos() {
             const waitersList = document.getElementById('waitersList');
             waitersList.innerHTML = ''; // Clear previous content
@@ -111,9 +157,10 @@
                     querySnapshot.forEach((doc) => {
                         const waiter = doc.data();
                         const profilePicPath = waiter.profile; // Assuming 'profile' field stores the profile photo path
-
+                        let amount='';
                         // Create HTML for each waiter card
-                        const upiLink = `upi://pay?pa=${encodeURIComponent(waiter.paymentid)}&pn=${encodeURIComponent(waiter.name)}&cu=INR`;
+                        const upiLink = `upi://pay?pa=${encodeURIComponent(waiter.paymentid)}&pn=${encodeURIComponent(waiter.name)}&cu=INR&am=${amount}`;
+
                         const waiterCard = document.createElement('div');
                         waiterCard.classList.add('waiter-card', 'col-md-4'); // Bootstrap column for grid layout
                         waiterCard.innerHTML = `
@@ -168,45 +215,6 @@
             if (paymentForm) {
                 paymentForm.style.display = 'block';
             }
-        }
-
-        // Function to initiate payment (QR code for desktop, UPI link for mobile)
-        function initiatePayment(upiLink, waiterId) {
-            const amountInput = document.getElementById(`amount-${waiterId}`);
-            const amount = amountInput.value.trim();
-            if (!amount) {
-                alert('Please enter the amount.');
-                return;
-            }
-
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            if (isMobile) {
-                // Open UPI link directly on mobile
-                window.location.href = `${upiLink}&am=${amount}`;
-            } else {
-                // Generate QR code for desktop
-                generateQRCode(upiLink, amount, waiterId);
-            }
-
-            // Hide the payment form after payment initiated
-            const paymentForm = document.getElementById(`paymentForm-${waiterId}`);
-            if (paymentForm) {
-                paymentForm.style.display = 'none';
-            }
-        }
-
-        // Function to generate QR code
-        function generateQRCode(upiLink, amount, waiterId) {
-            const qrCodeCanvas = document.getElementById('modalQrCodeCanvas');
-            const qrLink = `${upiLink}&am=${amount}`;
-            const qr = new QRious({
-                element: qrCodeCanvas,
-                value: qrLink,
-                size: 300 // Adjust size as needed
-            });
-
-            // Show QR code modal
-            $('#qrCodeModal').modal('show');
         }
 
         // Function to send message (example using mailto)
