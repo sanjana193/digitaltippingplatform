@@ -10,6 +10,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/b8d78448e3.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <style>
         /* Custom CSS styles */
         body {
@@ -87,11 +94,6 @@
 
         .profile-section h3, .profile-section p {
             margin: 0 0 10px;
-        }
-
-        .profile-section .points {
-            margin-top: 20px;
-            font-size: 18px;
         }
 
         .edit-profile {
@@ -185,14 +187,11 @@
     <div class="profile-slide-menu" id="profile-slide-menu">
         <span class="close-btn" id="close-btn">&times;</span>
         <div class="profile-section" id="profile-section">
-            <img src="images/profile.jpg" alt="User Profile Picture">
-            <h3>User Name</h3>
-            <p>user@example.com</p>
-            <div class="points">
-                Points Earned: 120
-            </div>
+            <img id="profile-photo" src="images/default-profile.jpg" alt="User Profile Picture">
+            <h3 id="user-name">Loading...</h3>
+            <p id="user-email">Loading...</p>
             <a href="#" class="edit-profile">Edit Profile</a>
-            <a href="#" class="logout">Log Out</a>
+            <a href="#" class="logout" id="logout-btn">Log Out</a>
         </div>
     </div>
 
@@ -202,7 +201,7 @@
                 <div class="hero-content text-center">
                     <h2>Support Your Favorite Wait Staff</h2>
                     <h1>Welcome to <span><b>EasyTip</b></span></h1>
-                    <a href="#" class="btn btn-primary">Tip Now</a>
+                    <a href="waiterpage.html" class="btn btn-primary" id="tip-now-btn">Tip Now</a>
                 </div>
             </div>
         </center>
@@ -249,40 +248,79 @@
         <div class="container">
             <h2>Testimonials</h2>
             <p>"EasyTip has made it so much easier for me to receive tips from my customers. I love how simple and efficient the process is!" - Sarah J.</p>
-            <p>"As a customer, I appreciate being able to tip my favorite waiters directly from my phone. EasyTip is a game changer!" - Michael R.</p>
-            <p>"EasyTip's secure transactions give me peace of mind when tipping my favorite staff members. Highly recommended!" - Emily T.</p>
+            <p>"As a customer, I appreciate being able to tip my favorite waiters directly from my phone. EasyTip is a game-changer!" - Michael T.</p>
         </div>
     </section>
 
     <section id="contact">
         <div class="container">
             <h2>Contact Us</h2>
-            <p>Have questions or feedback? Reach out to us!</p>
-            <form id="contactForm">
-                <input type="text" id="name" name="name" placeholder="Your Name" required>
-                <input type="email" id="email" name="email" placeholder="Your Email" required>
-                <textarea id="message" name="message" rows="4" placeholder="Your Message" required></textarea>
-                <button type="submit" class="btn btn-primary">Send Message</button>
-            </form>
+            <p>If you have any questions or feedback, feel free to contact us at <a href="mailto:support@easytip.com">support@easytip.com</a>.</p>
         </div>
     </section>
 
-    <footer>
+    <footer class="text-center">
         <div class="container">
-            <p>&copy; 2024 EasyTip. All rights reserved.</p>
+            <p>&copy; 2023 EasyTip. All Rights Reserved.</p>
         </div>
     </footer>
 
-
     <script>
-        document.getElementById('menu-btn').addEventListener('click', function() {
-            document.getElementById('profile-slide-menu').classList.toggle('active');
+        // Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyDp-s0BBjljVyxweHyms3BQ1ghTBpmG_w4",
+            authDomain: "digital-tip.firebaseapp.com",
+            projectId: "digital-tip",
+            storageBucket: "digital-tip.appspot.com",
+            messagingSenderId: "807054684224",
+            appId: "1:807054684224:web:97c40a9a0a5fa8a81b0fa4",
+            measurementId: "G-HM9ZNVXDS7"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                var uid = user.uid;
+                var userRef = firebase.firestore().collection('users').doc(uid);
+                userRef.get().then(function(doc) {
+                    if (doc.exists) {
+                        document.getElementById('user-name').textContent = doc.data().name;
+                        document.getElementById('user-email').textContent = doc.data().email;
+                        document.getElementById('profile-photo').src = doc.data().profilePictureUrl || 'images/default-profile.jpg';
+                    }
+                });
+            }
         });
 
-        document.getElementById('close-btn').addEventListener('click', function() {
+        // Function to show profile menu
+        function showProfileMenu() {
+            document.getElementById('profile-slide-menu').classList.add('active');
+        }
+
+        // Function to hide profile menu
+        function hideProfileMenu() {
             document.getElementById('profile-slide-menu').classList.remove('active');
+        }
+
+        // Logout function
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            firebase.auth().signOut().then(function() {
+                console.log('User signed out.');
+                window.location.href = 'login.html';
+            }).catch(function(error) {
+                console.error('Sign Out Error', error);
+            });
+        });
+
+        // Add event listeners for menu and close buttons
+        document.getElementById('menu-btn').addEventListener('click', showProfileMenu);
+        document.getElementById('close-btn').addEventListener('click', hideProfileMenu);
+
+        // Function to handle "Tip Now" button click
+        document.getElementById('tip-now-btn').addEventListener('click', function() {
+            // Redirect to the tipping page (modify the URL as needed)
+            window.location.href = 'waiterpage.html';
         });
     </script>
 </body>
 </html>
-updated home page
