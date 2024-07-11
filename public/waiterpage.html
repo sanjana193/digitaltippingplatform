@@ -27,13 +27,14 @@
             display: none; /* Initially hide message form */
             margin-top: 10px;
         }
+        .payment-form {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 class="mt-4 mb-4">Waiters Profiles
-            
-        </h2>
+        <h2 class="mt-4 mb-4">Waiters Profiles</h2>
         
         <!-- Search Bar -->
         <div class="search-bar">
@@ -79,12 +80,12 @@
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
-            authDomain: "digitaltipping.firebaseapp.com",
-            projectId: "digitaltipping",
-            storageBucket: "digitaltipping.appspot.com",
-            messagingSenderId: "1028902624608",
-            appId: "1:1028902624608:web:101410a2bbd20316701205",
-            measurementId: "G-HHTG6R4CH6"
+  authDomain: "digitaltipping.firebaseapp.com",
+  projectId: "digitaltipping",
+  storageBucket: "digitaltipping.appspot.com",
+  messagingSenderId: "1028902624608",
+  appId: "1:1028902624608:web:101410a2bbd20316701205",
+  measurementId: "G-HHTG6R4CH6"
         };
 
         // Initialize Firebase
@@ -92,19 +93,6 @@
         const db = firebase.firestore();
         const storage = firebase.storage();
         const auth = firebase.auth();
-
-        // Authenticate user
-        auth.signInAnonymously().catch((error) => {
-            console.error('Authentication error:', error);
-        });
-
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                fetchWaitersWithPhotos();
-            } else {
-                console.error('User not authenticated');
-            }
-        });
 
         // Function to fetch and display waiters with profile photos
         function fetchWaitersWithPhotos() {
@@ -130,13 +118,17 @@
                                 <!-- Payment buttons will be added here -->
                             </div>
                             <div class="mt-2">
-                                <button onclick="handlePayment('${upiLink}', '${doc.id}')">Pay Now</button>
+                                <button onclick="requestAmount('${doc.id}')">Pay Now</button>
                                 <button onclick="toggleMessageForm('${doc.id}')">Send Message</button>
-                                <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
-                                    <input type="text" name="message" class="form-control mb-2" placeholder="Message (optional)">
-                                    <button type="submit" class="btn btn-primary">Send</button>
-                                </form>
                             </div>
+                            <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
+                                <textarea name="message" class="form-control mb-2" rows="3" placeholder="Type your message here" required></textarea>
+                                <button type="submit" class="btn btn-primary">Send</button>
+                            </form>
+                            <form id="paymentForm-${doc.id}" class="payment-form" style="display: none;">
+                                <input type="number" id="amount-${doc.id}" class="form-control mb-2" placeholder="Enter amount" required>
+                                <button type="button" onclick="initiatePayment('${upiLink}', '${doc.id}')">Proceed</button>
+                            </form>
                         `;
                         waitersList.appendChild(waiterCard);
 
@@ -163,41 +155,66 @@
             }
         }
 
+        // Function to request amount input
+        function requestAmount(waiterId) {
+            const paymentForm = document.getElementById(`paymentForm-${waiterId}`);
+            if (paymentForm) {
+                paymentForm.style.display = 'block';
+            }
+        }
+
+        // Function to initiate payment (QR code for desktop, UPI link for mobile)
+        function initiatePayment(upiLink, waiterId) {
+            const amountInput = document.getElementById(`amount-${waiterId}`);
+            const amount = amountInput.value.trim();
+            if (!amount) {
+                alert('Please enter the amount.');
+                return;
+            }
+
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                // Open UPI link directly on mobile
+                window.location.href = `${upiLink}&am=${amount}`;
+            } else {
+                // Generate QR code for desktop
+                generateQRCode(upiLink, amount, waiterId);
+            }
+
+            // Hide the payment form after payment initiated
+            const paymentForm = document.getElementById(`paymentForm-${waiterId}`);
+            if (paymentForm) {
+                paymentForm.style.display = 'none';
+            }
+        }
+
+        // Function to generate QR code
+        function generateQRCode(upiLink, amount, waiterId) {
+            const qrCodeCanvas = document.getElementById('modalQrCodeCanvas');
+            const qrLink = `${upiLink}&am=${amount}`;
+            const qr = new QRious({
+                element: qrCodeCanvas,
+                value: qrLink,
+                size: 300 // Adjust size as needed
+            });
+
+            // Show QR code modal
+            $('#qrCodeModal').modal('show');
+        }
+
         // Function to send message (example using mailto)
         function sendMessage(event, email) {
             event.preventDefault();
             const form = event.target;
             const message = form.elements.message.value;
 
-            // Construct the mailto URL with email and message
+            // Construct the mailto URL with subject and body
             const mailtoUrl = `mailto:${email}?subject=Message%20from%20Customer&body=${encodeURIComponent(message)}`;
 
             // Open the default email client
             window.location.href = mailtoUrl;
 
             form.reset(); // Reset form after submission
-        }
-
-        // Function to handle payment
-        function handlePayment(upiLink, waiterId) {
-            // Check if device is mobile
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-            if (isMobile) {
-                // Redirect to payment link (replace with actual payment gateway URL)
-                window.location.href = upiLink;
-            } else {
-                // Show QR code modal for desktop users
-                const modalQrCodeCanvas = document.getElementById('modalQrCodeCanvas');
-                modalQrCodeCanvas.width = 200;
-                modalQrCodeCanvas.height = 200;
-                const qr = new QRious({
-                    element: modalQrCodeCanvas,
-                    value: upiLink,
-                    size: 200
-                });
-                $('#qrCodeModal').modal('show');
-            }
         }
 
         // Function to search waiters by name or restaurant
@@ -218,6 +235,11 @@
                 }
             }
         }
+
+        // Trigger fetching waiters when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWaitersWithPhotos();
+        });
     </script>
 </body>
 </html>
