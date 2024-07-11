@@ -10,15 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/b8d78448e3.js" crossorigin="anonymous"></script>
-   
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-storage-compat.js"></script>
-     <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="scripts/app.js" type="module"></script>   <style>
+    <style>
         /* Custom CSS styles */
         body {
             margin: 0;
@@ -29,6 +21,10 @@
 
         .navbar {
             background-color: #000;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .navbar-brand {
@@ -37,288 +33,180 @@
             color: #fff;
         }
 
-        .nav-link {
-            color: #fff !important;
-            font-weight: bold;
-            position: relative;
+        .navbar-toggler {
+            border: none;
+            background: none;
         }
 
-        .nav-link:hover::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background-color: #ff004f;
-            left: 0;
-            bottom: -5px;
-            transition: width 0.5s;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
-        .menu-toggle {
-            display: none;
-        }
-
-        .hero-content {
-            max-width: 600px;
+        .navbar-toggler-icon {
             color: #fff;
-        }
-
-        .hero-content h2 {
             font-size: 24px;
-            margin-bottom: 10px;
         }
 
-        .hero-content h1 {
-            font-size: 48px;
+        .profile-slide-menu {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background-color: #ff004f;
+            color: #fff;
+            transition: right 0.3s ease;
+            padding: 20px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-slide-menu.active {
+            right: 0;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        .profile-section img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
             margin-bottom: 20px;
         }
 
-        .hero-content span {
-            color: #ff004f;
+        .profile-section h3, .profile-section p {
+            margin: 0 0 10px;
         }
 
-        .hero-content .btn {
-            padding: 10px 20px;
-            background-color: #ff004f;
+        .profile-section .points {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .edit-profile {
+            margin: 20px 0;
+            font-size: 18px;
             color: #fff;
             text-decoration: none;
+            background-color: #000;
+            padding: 10px 20px;
             border-radius: 5px;
-        }
-
-        #about {
-            padding: 80px 20px;
-            background-color: #000;
-            color: #ababab;
             text-align: center;
         }
 
-        #about h2 {
-            font-size: 36px;
-            margin-bottom: 20px;
-            color: #fff;
-        }
-
-        #about p {
+        .logout {
+            margin-top: auto;
             font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        #about img {
-            max-width: 100%;
-            border-radius: 15px;
-        }
-
-        #features {
-            padding: 80px 20px;
-            background-color: #000;
             color: #fff;
+            text-decoration: none;
+            background-color: #000;
+            padding: 10px 20px;
+            border-radius: 5px;
             text-align: center;
         }
 
-        #features .container {
-            max-width: 1000px;
-            margin: 0 auto;
+        .testimonial {
+            background-color: #333;
+            color: #fff;
+            padding: 50px 0;
+            text-align: center;
+        }
+
+        .testimonial h2 {
+            margin-bottom: 20px;
+        }
+
+        .testimonial p {
+            font-size: 18px;
         }
 
         .feature {
-            display: inline-block;
-            width: 100%;
             padding: 20px;
-            transition: background-color 0.5s, transform 0.5s;
-            text-align: left;
+            background-color: #111;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         .feature i {
-            font-size: 48px;
-            margin-bottom: 10px;
-            color: #ff004f;
+            margin-bottom: 15px;
         }
 
         .feature h3 {
             font-size: 24px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .feature p {
-            font-size: 18px;
+            font-size: 16px;
         }
 
-        .feature:hover {
-            background-color: #ff004f;
-            color: #000;
-            transform: translateY(-10px);
-        }
-
-        .feature:hover i,
-        .feature:hover h3,
-        .feature:hover p {
-            color: #000;
-        }
-
-        #profile {
-            padding: 80px 20px;
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-        }
-
-        #profile .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .points {
+        .container .row {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: space-around;
         }
 
-        .points i {
-            font-size: 24px;
-            margin-right: 5px;
-            color: #ff004f;
+        .col-lg-4 {
+            flex: 0 0 30%;
+            max-width: 30%;
         }
 
-        .badges {
-            text-align: left;
-        }
-
-        .badge {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .badge i {
-            font-size: 18px;
-            margin-right: 5px;
-            color: #ff004f;
-        }
-
-        #contact {
-            padding: 80px 20px;
-            background-color: #000;
-            color: #fff;
-            text-align: center;
-        }
-
-        #contact .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        #contact h2 {
-            font-size: 36px;
-            margin-bottom: 20px;
-        }
-
-        #contact p {
-            font-size: 18px;
-            margin-bottom: 20px;
-        }
-
-        #contact form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        #contact form input,
-        #contact form textarea {
-            width: 100%;
-            max-width: 600px;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: none;
-            border-radius: 5px;
-        }
-
-        #contact form button {
-            padding: 10px 20px;
-            background-color: #ff004f;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        footer {
-            padding: 20px 0;
-            background-color: #000;
-            color: #fff;
-            text-align: center;
+        @media (max-width: 768px) {
+            .col-lg-4 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
         }
     </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg">
-            <div class="container">
-                <a class="navbar-brand" href="#">Easy<span style="color: #ff004f;">Tip</span></a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="#home">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#about">About</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#features">Features</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#profile">Profile</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#contact">Contact</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+        <nav class="navbar">
+            <a class="navbar-brand" href="#">Easy<span style="color: #ff004f;">Tip.</span></a>
+            <button class="navbar-toggler" type="button" id="menu-btn">
+                <span class="navbar-toggler-icon"><i class="fas fa-bars"></i></span>
+            </button>
         </nav>
     </header>
-    
+
+    <!-- Profile Slide Menu -->
+    <div class="profile-slide-menu" id="profile-slide-menu">
+        <span class="close-btn" id="close-btn">&times;</span>
+        <div class="profile-section" id="profile-section">
+            <img src="images/profile.jpg" alt="User Profile Picture">
+            <h3>User Name</h3>
+            <p>user@example.com</p>
+            <div class="points">
+                Points Earned: 120
+            </div>
+            <a href="#" class="edit-profile">Edit Profile</a>
+            <a href="#" class="logout">Log Out</a>
+        </div>
+    </div>
+
     <section id="home">
         <center>
-        <div class="container">
-            <div class="hero-content text-center">
-                <h2>Support Your Favorite Wait Staff</h2>
-                <h1>Welcome to <span>EasyTip</span>!.</h1>
-                <a href="waiterpage.html" class="btn btn-primary">Tip Now</a>
-            </div>
-        </div>
-    </center>
-    </section>
-    <section id="profile">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 mx-auto mb-4 text-center">
-                    <img id="profile-photo" src="images/default-profile.jpg" class="img-fluid rounded-circle mb-3" alt="Profile Photo">
-                    <h3 id="user-name">Loading...</h3>
-                    <p id="user-email">Wait Staff</p>
-                    <div class="points">
-                        <i class="fas fa-coins" style="color: #ff004f;"></i>
-                        <span id="loyaltyPoints">Loading...</span>
-                    </div>
-                    <div id="badges-container" class="badges">
-                        <!-- Badges will be dynamically added here -->
-                    </div>
+            <div class="container">
+                <div class="hero-content text-center">
+                    <h2>Support Your Favorite Wait Staff</h2>
+                    <h1>Welcome to <span><b>EasyTip</b></span></h1>
+                    <a href="#" class="btn btn-primary">Tip Now</a>
                 </div>
             </div>
-        </div>
+        </center>
     </section>
-
-    
 
     <section id="about">
         <div class="container">
@@ -357,12 +245,15 @@
         </div>
     </section>
 
-    
-      
-      
-      
-    
-    
+    <section id="testimonials" class="testimonial">
+        <div class="container">
+            <h2>Testimonials</h2>
+            <p>"EasyTip has made it so much easier for me to receive tips from my customers. I love how simple and efficient the process is!" - Sarah J.</p>
+            <p>"As a customer, I appreciate being able to tip my favorite waiters directly from my phone. EasyTip is a game changer!" - Michael R.</p>
+            <p>"EasyTip's secure transactions give me peace of mind when tipping my favorite staff members. Highly recommended!" - Emily T.</p>
+        </div>
+    </section>
+
     <section id="contact">
         <div class="container">
             <h2>Contact Us</h2>
@@ -375,15 +266,22 @@
             </form>
         </div>
     </section>
-    
+
     <footer>
         <div class="container">
             <p>&copy; 2024 EasyTip. All rights reserved.</p>
         </div>
     </footer>
 
-    
-    
-    
-    </body>
-    </html>
+
+    <script>
+        document.getElementById('menu-btn').addEventListener('click', function() {
+            document.getElementById('profile-slide-menu').classList.toggle('active');
+        });
+
+        document.getElementById('close-btn').addEventListener('click', function() {
+            document.getElementById('profile-slide-menu').classList.remove('active');
+        });
+    </script>
+</body>
+</html>

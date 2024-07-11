@@ -20,21 +20,21 @@ var storage = firebase.storage();
 // Function to fetch user data from Firestore
 function fetchUserDataMenu() {
   var userId = firebase.auth().currentUser.uid;
-  var docRef = firebase.firestore().collection("users").doc(userId);
+  var docRef = firestore.collection("users").doc(userId);
 
- // Example of using Firestore real-time listener
- docRef.get().then((doc) => {
-  if (doc.exists) {
-    var userData = doc.data();
-    console.log("User Data Retrieved:", userData);
-    updateProfileMenu(userData);
-  } else {
-    console.log("No such document!");
-  }
-}).catch((error) => {
-  console.error("Error getting document:", error);
-});
+  docRef.get().then((doc) => {
+    if (doc.exists) {
+      var userData = doc.data();
+      console.log("User Data Retrieved:", userData);
+      updateProfileMenu(userData);
+    } else {
+      console.log("No such document!");
+    }
+  }).catch((error) => {
+    console.error("Error getting document:", error);
+  });
 }
+
 // Function to update profile section in HTML
 function updateProfileMenu(userData) {
   var profilePhotoElement = document.getElementById("profile-photo");
@@ -64,4 +64,18 @@ auth.onAuthStateChanged(function(user) {
     console.log("No user signed in.");
     // Handle this case if necessary
   }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const menuToggle = document.querySelector('.menu-toggle');
+  const profileSection = document.querySelector('#profile');
+  const closeProfileBtn = document.querySelector('.close-profile');
+
+  menuToggle.addEventListener('click', () => {
+    profileSection.classList.toggle('slide-in');
+  });
+
+  closeProfileBtn.addEventListener('click', () => {
+    profileSection.classList.remove('slide-in');
+  });
 });
