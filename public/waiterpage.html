@@ -28,11 +28,6 @@
         .payment-form {
             margin-top: 10px;
         }
-        #video {
-            width: 100%;
-            max-width: 300px;
-            display: none;
-        }
         #qrCanvas {
             width: 200px;
             height: 200px;
@@ -120,7 +115,7 @@
                         <form id="paymentForm-${doc.id}" class="payment-form" style="display: none;">
                             <input type="number" id="amount-${doc.id}" class="form-control mb-2" placeholder="Enter amount" required>
                             <button type="button" onclick="initiatePayment('${upiLink}', '${doc.id}')">Proceed</button>
-                            <button type="button" onclick="scanQRCode('${upiLink}')">Scan QR Code</button>
+                            <button type="button" onclick="scanQRCodeFromCanvas('${upiLink}', '${doc.id}')">Scan QR Code</button>
                             <canvas id="qrCanvas-${doc.id}" style="display: none;"></canvas>
                         </form>
                     `;
@@ -176,41 +171,22 @@
             qrCanvas.scrollIntoView({ behavior: 'smooth' });
         }
 
-        async function scanQRCode(upiLink) {
+        function scanQRCodeFromCanvas(upiLink, waiterId) {
+            const qrCanvas = document.getElementById(`qrCanvas-${waiterId}`);
+            const context = qrCanvas.getContext('2d');
+            const imageData = context.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+
             if (!codeReader) {
                 codeReader = new ZXing.BrowserQRCodeReader();
             }
 
-            const videoInputDevices = await codeReader.listVideoInputDevices();
-            const selectedDeviceId = videoInputDevices[0].deviceId;
-
-            const video = document.getElementById('video');
-            video.style.display = 'block';
-
-            try {
-                const result = await codeReader.decodeFromInputVideoDevice(selectedDeviceId, video);
+            codeReader.decodeFromImageData(imageData).then(result => {
                 console.log('Scanned QR code:', result.text);
                 window.location.href = result.text;
-            } catch (error) {
-                console.error('QR code scanning error:', error);
+            }).catch(err => {
+                console.error('Failed to scan QR code:', err);
                 alert('Failed to scan QR code. Please try again.');
-            } finally {
-                stopScanner();
-            }
-        }
-
-        function stopScanner() {
-            const video = document.getElementById('video');
-            if (video) {
-                video.pause();
-                video.srcObject = null;
-                video.style.display = 'none';
-            }
-
-            if (currentStream) {
-                currentStream.getTracks().forEach(track => track.stop());
-                currentStream = null;
-            }
+            });
         }
 
         function sendMessage(event, waiterEmail) {
