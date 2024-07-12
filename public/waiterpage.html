@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waiter Page</title>
+    <title>Waiter Page with jsQR</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .waiter-card {
@@ -65,8 +65,8 @@
                         <input type="number" id="tipAmount" class="form-control mb-2" placeholder="Enter amount" required>
                         <button id="generateQRCodeButton" class="btn btn-primary">Proceed</button>
                     </div>
-                    <video id="video" autoplay></video>
                     <canvas id="qrCanvas"></canvas>
+                    <button id="scanQRCodeButton" class="btn btn-secondary">Scan QR Code</button>
                 </div>
             </div>
         </div>
@@ -76,25 +76,24 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://unpkg.com/@zxing/library@10.7.0"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
-    authDomain: "digitaltipping.firebaseapp.com",
-    projectId: "digitaltipping",
-    storageBucket: "digitaltipping.appspot.com",
-    messagingSenderId: "1028902624608",
-    appId: "1:1028902624608:web:101410a2bbd20316701205",
-    measurementId: "G-HHTG6R4CH6"
+            authDomain: "digitaltipping.firebaseapp.com",
+            projectId: "digitaltipping",
+            storageBucket: "digitaltipping.appspot.com",
+            messagingSenderId: "1028902624608",
+            appId: "1:1028902624608:web:101410a2bbd20316701205",
+            measurementId: "G-HHTG6R4CH6"
         };
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Function to fetch waiters and display them
         function fetchWaitersWithPhotos() {
             const waitersList = document.getElementById('waitersList');
             waitersList.innerHTML = '';
@@ -126,7 +125,6 @@
             });
         }
 
-        // Function to toggle message form visibility
         function toggleMessageForm(waiterId) {
             const messageForm = document.getElementById(`messageForm-${waiterId}`);
             if (messageForm) {
@@ -134,108 +132,98 @@
             }
         }
 
-        // Function to show tip modal and set up for QR code generation
         function showTipModal(paymentId, waiterId) {
-            const modal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
-            modal.show();
-            document.getElementById('qrCodeModalLabel').innerText = 'Scan QR Code to Send Tip';
-            document.getElementById('tipAmount').value = '';
-            document.getElementById('amountInput').style.display = 'block';
-            document.getElementById('qrCanvas').style.display = 'none';
-            document.getElementById('video').style.display = 'none';
+    const amountInput = document.getElementById('amountInput');
+    const qrCanvas = document.getElementById('qrCanvas');
+    const modal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+    
+    if (!amountInput || !qrCanvas) {
+        console.error('Required elements not found.');
+        return;
+    }
 
-            // Set onclick handler for generateQRCodeButton
-            const generateQRCodeButton = document.getElementById('generateQRCodeButton');
-            if (generateQRCodeButton) {
-                generateQRCodeButton.onclick = function () {
-                    const tipAmount = document.getElementById('tipAmount').value.trim();
-                    if (tipAmount === '') {
-                        alert('Please enter a valid tip amount.');
-                        return;
-                    }
-                    const amountUPI = `upi://pay?pa=${encodeURIComponent(paymentId)}&pn=${encodeURIComponent(waiterId)}&tn=Tip&am=${tipAmount}&cu=INR`;
-                    generateQRCode(amountUPI, waiterId);
-                };
-            } else {
-                console.error('generateQRCodeButton not found.');
+    modal.show();
+    document.getElementById('qrCodeModalLabel').innerText = 'Scan QR Code to Send Tip';
+    document.getElementById('tipAmount').value = '';
+    amountInput.style.display = 'block';
+    qrCanvas.style.display = 'none';
+
+    const generateQRCodeButton = document.getElementById('generateQRCodeButton');
+    if (generateQRCodeButton) {
+        generateQRCodeButton.onclick = function () {
+            const tipAmount = document.getElementById('tipAmount').value.trim();
+            if (tipAmount === '') {
+                alert('Please enter a valid tip amount.');
+                return;
             }
-        }
+            const amountUPI = `upi://pay?pa=${encodeURIComponent(paymentId)}&pn=${encodeURIComponent(waiterId)}&tn=Tip&am=${tipAmount}&cu=INR`;
+            generateQRCode(amountUPI);
+        };
+    } else {
+        console.error('generateQRCodeButton not found.');
+    }
 
-        // Function to generate QR code
-        function generateQRCode(upiLink, waiterId) {
-            const qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+    const scanQRCodeButton = document.getElementById('scanQRCodeButton');
+    if (scanQRCodeButton) {
+        scanQRCodeButton.onclick = function () {
+            scanQRCodeFromCanvas(document.getElementById('qrCanvas'));
+        };
+    } else {
+        console.error('scanQRCodeButton not found.');
+    }
+}
+
+
+        function generateQRCode(upiLink) {
             const qrCodeCanvas = document.getElementById('qrCanvas');
-            qrCodeCanvas.innerHTML = ''; // Clear previous content if any
+            qrCodeCanvas.innerHTML = '';
             const qr = new QRious({
                 element: qrCodeCanvas,
                 value: upiLink,
                 size: 200
             });
-            document.getElementById('qrCodeModalLabel').innerText = 'Scan the QR Code to Send Tip'; // Update modal label
-            qrCodeCanvas.style.display = 'block'; // Show QR code canvas
-
-            // Enable QR code scanning after a brief delay to ensure it's rendered
-            setTimeout(() => {
-                scanQRCodeFromCanvas(qrCodeCanvas);
-            }, 1000); // Adjust timing as needed
+            document.getElementById('qrCodeModalLabel').innerText = 'Scan the QR Code to Send Tip';
+            qrCodeCanvas.style.display = 'block';
         }
 
-        
-        // Function to scan QR code from canvas
         function scanQRCodeFromCanvas(canvas) {
-            // Ensure ZXing is properly loaded and defined
-            if (typeof ZXing === 'undefined') {
-                console.error('ZXing library not loaded.');
-                return;
+            const context = canvas.getContext('2d');
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            if (code) {
+                console.log('QR Code scanned successfully:', code.data);
+                alert('QR Code scanned successfully: ' + code.data);
+            } else {
+                console.error('No QR code found.');
+                alert('No QR code found. Please try again.');
             }
-
-            // Use ZXing to decode QR code from canvas
-            const codeReader = new ZXing.BrowserQRCodeReader();
-            codeReader.decodeFromCanvas(canvas, (result, err) => {
-                if (result) {
-                    // Handle QR code scan result
-                    console.log('QR Code scanned successfully:', result);
-                    alert('QR Code scanned successfully: ' + result.text);
-                } else {
-                    // Handle scan error
-                    console.error('Error scanning QR code:', err);
-                    alert('Error scanning QR code: ' + err);
-                }
-            });
         }
 
-        // Function to search for waiters by name or restaurant
-        function searchWaiters() {
-            const searchInput = document.getElementById('searchInput').value.toUpperCase();
-            const waitersList = document.getElementById('waitersList');
-            const waiterCards = waitersList.getElementsByClassName('waiter-card');
-            Array.from(waiterCards).forEach((waiterCard) => {
-                const name = waiterCard.getElementsByTagName('h3')[0].innerText.toUpperCase();
-                const restaurant = waiterCard.getElementsByTagName('p')[1].innerText.toUpperCase();
-                if (name.includes(searchInput) || restaurant.includes(searchInput)) {
-                    waiterCard.style.display = '';
-                } else {
-                    waiterCard.style.display = 'none';
-                }
-            });
-        }
-
-        // Function to send message to waiter
         function sendMessage(event, waiterEmail) {
             event.preventDefault();
-            const messageForm = event.target;
-            const message = messageForm.message.value.trim();
+            const message = event.target.message.value.trim();
             if (message === '') {
-                alert('Please enter a message.');
+                alert('Please enter a valid message.');
                 return;
             }
-            // Example: Send message functionality (replace with your own implementation)
-            alert(`Message sent to ${waiterEmail}: ${message}`);
-            messageForm.reset();
-            toggleMessageForm(waiterEmail); // Hide message form after sending message
+            alert('Message sent successfully to ' + waiterEmail + ': ' + message);
+            event.target.reset();
         }
 
-        // Fetch and display initial list of waiters
+        function searchWaiters() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const waiters = document.querySelectorAll('.waiter-card');
+            waiters.forEach((waiter) => {
+                const name = waiter.querySelector('h3').textContent.toLowerCase();
+                const restaurant = waiter.querySelector('p:nth-child(4)').textContent.toLowerCase();
+                if (name.includes(searchInput) || restaurant.includes(searchInput)) {
+                    waiter.style.display = 'block';
+                } else {
+                    waiter.style.display = 'none';
+                }
+            });
+        }
+
         fetchWaitersWithPhotos();
     </script>
 </body>
