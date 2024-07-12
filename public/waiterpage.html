@@ -79,7 +79,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script src="https://unpkg.com/@zxing/library@10.7.0"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
@@ -93,8 +93,6 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage();
-        const auth = firebase.auth();
 
         // Function to fetch waiters and display them
         function fetchWaitersWithPhotos() {
@@ -104,7 +102,6 @@
                 querySnapshot.forEach((doc) => {
                     const waiter = doc.data();
                     const profilePicPath = waiter.profile;
-                    const upiLink = `upi://pay?pa=${encodeURIComponent(waiter.paymentid)}&pn=${encodeURIComponent(waiter.name)}&cu=INR`;
                     const waiterCard = document.createElement('div');
                     waiterCard.classList.add('waiter-card', 'col-md-4');
                     waiterCard.innerHTML = `
@@ -114,7 +111,7 @@
                         <p>Restaurant: ${waiter.restaurant || 'Restaurant Name Not Provided'}</p>
                         <div id="paymentButtons-${doc.id}"></div>
                         <div class="mt-2">
-                            <button onclick="showTipModal('${upiLink}', '${doc.id}')">Send Tip</button>
+                            <button onclick="showTipModal('${waiter.paymentid}', '${doc.id}')">Send Tip</button>
                             <button onclick="toggleMessageForm('${doc.id}')">Send Message</button>
                         </div>
                         <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
@@ -138,7 +135,7 @@
         }
 
         // Function to show tip modal and set up for QR code generation
-        function showTipModal(upiLink, waiterId) {
+        function showTipModal(paymentId, waiterId) {
             const modal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
             modal.show();
             document.getElementById('qrCodeModalLabel').innerText = 'Scan QR Code to Send Tip';
@@ -156,7 +153,7 @@
                         alert('Please enter a valid tip amount.');
                         return;
                     }
-                    const amountUPI = `upi://pay?pa=${encodeURIComponent(upiLink)}&pn=${encodeURIComponent(waiterId)}&tn=Tip&am=${tipAmount}&cu=INR`;
+                    const amountUPI = `upi://pay?pa=${encodeURIComponent(paymentId)}&pn=${encodeURIComponent(waiterId)}&tn=Tip&am=${tipAmount}&cu=INR`;
                     generateQRCode(amountUPI, waiterId);
                 };
             } else {
@@ -174,52 +171,40 @@
                 value: upiLink,
                 size: 200
             });
-            qrCodeModal.show();
+            document.getElementById('qrCodeModalLabel').innerText = 'Scan the QR Code to Send Tip'; // Update modal label
+            qrCodeCanvas.style.display = 'block'; // Show QR code canvas
+
+            // Enable QR code scanning after a brief delay to ensure it's rendered
+            setTimeout(() => {
+                scanQRCodeFromCanvas(qrCodeCanvas);
+            }, 1000); // Adjust timing as needed
         }
 
-        // Function to capture the screen and scan the QR code
-        function generateQRCodeAndCapture() {
-            const tipAmount = document.getElementById('tipAmount').value.trim();
-            if (tipAmount === '') {
-                alert('Please enter a valid tip amount.');
+        
+        // Function to scan QR code from canvas
+        function scanQRCodeFromCanvas(canvas) {
+            // Ensure ZXing is properly loaded and defined
+            if (typeof ZXing === 'undefined') {
+                console.error('ZXing library not loaded.');
                 return;
             }
-            const amountUPI = `upi://pay?tn=Tip&am=${tipAmount}&cu=INR`;
-            generateQRCode(amountUPI); // Call generateQRCode to display QR code
 
-            // Capture screen using html2canvas
-            html2canvas(document.body).then(function(canvas) {
-                const imageData = canvas.toDataURL(); // Convert captured screen to base64 image data
-                scanQRCodeFromImage(imageData); // Call function to scan QR code from image
-            }).catch(function(error) {
-                console.error('Error capturing screen:', error);
-                alert('Failed to capture screen. Please try again.');
+            // Use ZXing to decode QR code from canvas
+            const codeReader = new ZXing.BrowserQRCodeReader();
+            codeReader.decodeFromCanvas(canvas, (result, err) => {
+                if (result) {
+                    // Handle QR code scan result
+                    console.log('QR Code scanned successfully:', result);
+                    alert('QR Code scanned successfully: ' + result.text);
+                } else {
+                    // Handle scan error
+                    console.error('Error scanning QR code:', err);
+                    alert('Error scanning QR code: ' + err);
+                }
             });
         }
 
-        // Function to scan QR code from image data
-        function scanQRCodeFromImage(imageData) {
-            const img = new Image();
-            img.onload = function() {
-                const codeReader = new ZXing.BrowserQRCodeReader();
-                const canvas = document.createElement('canvas');
-                canvas.width = this.width;
-                canvas.height = this.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(this, 0, 0);
-                codeReader.decodeFromImage(canvas, (result, error) => {
-                    if (result) {
-                        alert(`QR Code scanned successfully. Result: ${result.text}`);
-                    } else {
-                        console.error('Error scanning QR code:', error);
-                        alert('Failed to scan QR code. Please try again.');
-                    }
-                });
-            };
-            img.src = imageData;
-        }
-
-        // Function to search waiters by name or restaurant
+        // Function to search for waiters by name or restaurant
         function searchWaiters() {
             const searchInput = document.getElementById('searchInput').value.toUpperCase();
             const waitersList = document.getElementById('waitersList');
@@ -235,10 +220,23 @@
             });
         }
 
-        // Fetch waiters with photos on page load
-        window.onload = function() {
-            fetchWaitersWithPhotos();
-        };
+        // Function to send message to waiter
+        function sendMessage(event, waiterEmail) {
+            event.preventDefault();
+            const messageForm = event.target;
+            const message = messageForm.message.value.trim();
+            if (message === '') {
+                alert('Please enter a message.');
+                return;
+            }
+            // Example: Send message functionality (replace with your own implementation)
+            alert(`Message sent to ${waiterEmail}: ${message}`);
+            messageForm.reset();
+            toggleMessageForm(waiterEmail); // Hide message form after sending message
+        }
+
+        // Fetch and display initial list of waiters
+        fetchWaitersWithPhotos();
     </script>
 </body>
 </html>
