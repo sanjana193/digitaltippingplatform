@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waiter Page with QR Code Scanning and Payment</title>
+    <title>Waiter Page with QR Code Payment</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .waiter-card {
@@ -23,6 +23,9 @@
         }
         .message-form {
             display: none;
+            margin-top: 10px;
+        }
+        .payment-form {
             margin-top: 10px;
         }
         #video {
@@ -47,6 +50,8 @@
         </div>
         <div id="waitersList" class="row"></div>
     </div>
+
+    <!-- QR Code Modal -->
     <div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
@@ -64,14 +69,15 @@
                     </div>
                     <canvas id="qrCanvas"></canvas>
                     <button id="scanQRCodeButton" class="btn btn-secondary">Scan QR Code</button>
-                    <button id="simulatePaymentButton" class="btn btn-success" style="display: none;">Simulate Payment</button>
                 </div>
             </div>
         </div>
     </div>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -131,10 +137,9 @@
         function showTipModal(paymentId, waiterId) {
             const amountInput = document.getElementById('amountInput');
             const qrCanvas = document.getElementById('qrCanvas');
-            const simulatePaymentButton = document.getElementById('simulatePaymentButton');
             const modal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
 
-            if (!amountInput || !qrCanvas || !simulatePaymentButton) {
+            if (!amountInput || !qrCanvas) {
                 console.error('Required elements not found.');
                 return;
             }
@@ -144,7 +149,6 @@
             document.getElementById('tipAmount').value = '';
             amountInput.style.display = 'block';
             qrCanvas.style.display = 'none';
-            simulatePaymentButton.style.display = 'none';
 
             const generateQRCodeButton = document.getElementById('generateQRCodeButton');
             if (generateQRCodeButton) {
@@ -156,7 +160,6 @@
                     }
                     const amountUPI = `upi://pay?pa=${encodeURIComponent(paymentId)}&pn=${encodeURIComponent(waiterId)}&tn=Tip&am=${tipAmount}&cu=INR`;
                     generateQRCode(amountUPI);
-                    simulatePaymentButton.style.display = 'block';
                 };
             } else {
                 console.error('generateQRCodeButton not found.');
@@ -170,11 +173,6 @@
             } else {
                 console.error('scanQRCodeButton not found.');
             }
-
-            simulatePaymentButton.onclick = function () {
-                // Simulate payment process (you can add your actual payment logic here)
-                alert('Simulating payment process...');
-            };
         }
 
         function generateQRCode(upiLink) {
@@ -196,13 +194,23 @@
             if (code) {
                 console.log('QR Code scanned successfully:', code.data);
                 alert('QR Code scanned successfully: ' + code.data);
-                // You can optionally trigger the payment process here after successful scan
-                document.getElementById('simulatePaymentButton').click();
+                simulatePayment(code.data);
             } else {
                 console.error('No QR code found.');
                 alert('No QR code found. Please try again.');
             }
         }
+
+        function simulatePayment(qrData) {
+            // Simulate payment process
+            console.log('Simulating payment process for QR data:', qrData);
+            alert('Simulating payment process for QR data: ' + qrData);
+            // Implement your actual payment logic here
+            const upiLink = qrData; // Assuming qrData is the UPI payment link scanned from the QR code
+
+// Open the UPI payment link in a new window (for web applications)
+               window.open(upiLink);
+   }
 
         function sendMessage(event, waiterEmail) {
             event.preventDefault();
@@ -213,23 +221,24 @@
             }
             alert('Message sent successfully to ' + waiterEmail + ': ' + message);
             event.target.reset();
+            toggleMessageForm(waiterId); // Assuming `waiterId` is defined somewhere
+            // Implement code to send message to waiter via email or other means
         }
 
         function searchWaiters() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const waiters = document.querySelectorAll('.waiter-card');
-            waiters.forEach((waiter) => {
-                const name = waiter.querySelector('h3').textContent.toLowerCase();
-                const restaurant = waiter.querySelector('p:nth-child(4)').textContent.toLowerCase();
-                if (name.includes(searchInput) || restaurant.includes(searchInput)) {
-                    waiter.style.display = 'block';
-                } else {
-                    waiter.style.display = 'none';
-                }
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.getElementsByClassName('waiter-card');
+            Array.from(cards).forEach((card) => {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(input) ? 'block' : 'none';
             });
         }
 
-        fetchWaitersWithPhotos();
+        // Fetch waiters data when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            fetchWaitersWithPhotos();
+        });
+
     </script>
 </body>
 </html>
