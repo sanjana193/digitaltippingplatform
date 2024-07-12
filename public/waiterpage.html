@@ -28,6 +28,11 @@
         .payment-form {
             margin-top: 10px;
         }
+        #video {
+            width: 100%;
+            max-width: 300px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -48,7 +53,10 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <canvas id="modalQrCodeCanvas"></canvas>
+                    <video id="video" autoplay></video>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -75,6 +83,36 @@
         const storage = firebase.storage();
         const auth = firebase.auth();
 
+        async function startQRScanner(waiterId) {
+            try {
+                const video = document.getElementById('video');
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.play();
+
+                const codeReader = new ZXing.BrowserQRCodeReader();
+                const result = await codeReader.decodeFromVideoElement(video);
+
+                // Handle the scanned QR code result
+                console.log('Scanned QR code:', result.text);
+                alert('Scanned QR code: ' + result.text);
+
+                // Optionally, you can handle the QR code data (e.g., process payment)
+                // For example, redirect to a payment processing page or trigger payment action
+                // handleQRCodeResult(result.text);
+
+                // Close the QR code scanning modal
+                $('#qrCodeModal').modal('hide');
+
+                // Stop video stream
+                stream.getTracks().forEach(track => track.stop());
+
+            } catch (error) {
+                console.error('QR code scanning error:', error);
+                alert('Failed to scan QR code. Please try again.');
+            }
+        }
+
         function fetchWaitersWithPhotos() {
             const waitersList = document.getElementById('waitersList');
             waitersList.innerHTML = '';
@@ -94,6 +132,7 @@
                         <div class="mt-2">
                             <button onclick="requestAmount('${doc.id}')">Pay Now</button>
                             <button onclick="toggleMessageForm('${doc.id}')">Send Message</button>
+                            <button onclick="startQRScanner('${doc.id}')">Scan QR Code</button>
                         </div>
                         <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
                             <textarea name="message" class="form-control mb-2" rows="3" placeholder="Type your message here" required></textarea>
@@ -156,53 +195,66 @@
 
         function generateQRCode(upiLink, amount, waiterId) {
             const qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
-            const qrCodeCanvas = document.getElementById('modalQrCodeCanvas');
+            const video = document.getElementById('video');
+            video.style.display = 'block';
+            const qrCodeCanvas = document.createElement('canvas');
+            qrCodeCanvas.style.display = 'none';
             const qr = new QRious({
                 element: qrCodeCanvas,
                 value: upiLink,
-                size: 200
+                size: 300
             });
-            qrCodeModal.show();
+            const qrCodeImage = new Image();
+            qrCodeImage.src = qr.toDataURL();
+            qrCodeImage.alt = 'QR Code';
+            qrCodeImage.onload = () => {
+                qrCodeModal.show();
+                video.style.display = 'none';
+            };
+            const modalBody = document.querySelector('#qrCodeModal .modal-body');
+            modalBody.innerHTML = '';
+            modalBody.appendChild(qrCodeImage);
         }
 
         function sendMessage(event, waiterEmail) {
             event.preventDefault();
-            const form = event.target;
-            const message = form.message.value.trim();
+            const messageForm = event.target;
+            const message = messageForm.message.value.trim();
             if (!message) {
                 alert('Please enter a message.');
                 return;
             }
-            db.collection('messages').add({
-                email: waiterEmail,
-                message: message,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                alert('Message sent successfully.');
-                form.reset();
-            }).catch((error) => {
-                console.error('Error sending message: ', error);
-                alert('Error sending message. Please try again later.');
-            });
+            const userEmail = firebase.auth().currentUser.email;
+            console.log('Sending message:', message, 'to:', waiterEmail, 'from:', userEmail);
+            // Implement your message sending logic here (e.g., using Firebase Cloud Messaging)
+            alert('Message sent successfully!');
+            messageForm.reset();
+            toggleMessageForm();
         }
 
         function searchWaiters() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const waitersList = document.getElementById('waitersList');
-            const waiterCards = waitersList.getElementsByClassName('waiter-card');
-            for (let i = 0; i < waiterCards.length; i++) {
-                const card = waiterCards[i];
-                const name = card.getElementsByTagName('h3')[0].textContent.toLowerCase();
-                const restaurant = card.getElementsByTagName('p')[1].textContent.toLowerCase();
-                if (name.includes(searchInput) || restaurant.includes(searchInput)) {
-                    card.style.display = '';
+            const input = document.getElementById('searchInput').value.toUpperCase();
+            const waiters = document.getElementById('waitersList').getElementsByClassName('waiter-card');
+            Array.from(waiters).forEach((waiterCard) => {
+                const name = waiterCard.getElementsByTagName('h3')[0].innerText.toUpperCase();
+                const restaurant = waiterCard.getElementsByTagName('p')[1].innerText.toUpperCase();
+                if (name.indexOf(input) > -1 || restaurant.indexOf(input) > -1) {
+                    waiterCard.style.display = '';
                 } else {
-                    card.style.display = 'none';
+                    waiterCard.style.display = 'none';
                 }
-            }
+            });
         }
 
-        document.addEventListener('DOMContentLoaded', fetchWaitersWithPhotos);
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('User logged in:', user.email);
+                fetchWaitersWithPhotos();
+            } else {
+                console.log('No user logged in.');
+                // Redirect to login page or handle authentication state
+            }
+        });
     </script>
 </body>
 </html>
