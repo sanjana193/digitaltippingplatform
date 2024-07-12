@@ -68,6 +68,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Include ZXing library -->
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
@@ -85,27 +87,21 @@
 
         async function startQRScanner(waiterId) {
             try {
-                const video = document.getElementById('video');
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                video.play();
-
                 const codeReader = new ZXing.BrowserQRCodeReader();
-                const result = await codeReader.decodeFromVideoElement(video);
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+                const selectedDeviceId = videoInputDevices[0].deviceId;
+                const video = document.getElementById('video');
+                video.style.display = 'block';
 
-                // Handle the scanned QR code result
-                console.log('Scanned QR code:', result.text);
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
+                video.srcObject = stream;
+
+                const result = await codeReader.decodeOnceFromVideoDevice(selectedDeviceId, 'video');
                 alert('Scanned QR code: ' + result.text);
 
-                // Optionally, you can handle the QR code data (e.g., process payment)
-                // For example, redirect to a payment processing page or trigger payment action
-                // handleQRCodeResult(result.text);
-
-                // Close the QR code scanning modal
-                $('#qrCodeModal').modal('hide');
-
-                // Stop video stream
                 stream.getTracks().forEach(track => track.stop());
+                video.style.display = 'none';
+                $('#qrCodeModal').modal('hide');
 
             } catch (error) {
                 console.error('QR code scanning error:', error);
@@ -196,20 +192,18 @@
         function generateQRCode(upiLink, amount, waiterId) {
             const qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
             const video = document.getElementById('video');
-            video.style.display = 'block';
+            video.style.display = 'none';
             const qrCodeCanvas = document.createElement('canvas');
-            qrCodeCanvas.style.display = 'none';
-            const qr = new QRious({
+            new QRious({
                 element: qrCodeCanvas,
                 value: upiLink,
                 size: 300
             });
             const qrCodeImage = new Image();
-            qrCodeImage.src = qr.toDataURL();
+            qrCodeImage.src = qrCodeCanvas.toDataURL();
             qrCodeImage.alt = 'QR Code';
             qrCodeImage.onload = () => {
                 qrCodeModal.show();
-                video.style.display = 'none';
             };
             const modalBody = document.querySelector('#qrCodeModal .modal-body');
             modalBody.innerHTML = '';
@@ -226,7 +220,6 @@
             }
             const userEmail = firebase.auth().currentUser.email;
             console.log('Sending message:', message, 'to:', waiterEmail, 'from:', userEmail);
-            // Implement your message sending logic here (e.g., using Firebase Cloud Messaging)
             alert('Message sent successfully!');
             messageForm.reset();
             toggleMessageForm();
@@ -252,7 +245,6 @@
                 fetchWaitersWithPhotos();
             } else {
                 console.log('No user logged in.');
-                // Redirect to login page or handle authentication state
             }
         });
     </script>
