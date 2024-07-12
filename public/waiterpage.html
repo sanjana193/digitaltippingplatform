@@ -33,6 +33,11 @@
             max-width: 300px;
             display: none;
         }
+        #qrCanvas {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+        }
     </style>
 </head>
 <body>
@@ -56,7 +61,7 @@
                     <video id="video" autoplay></video>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="stopScanner()">Close</button>
                 </div>
             </div>
         </div>
@@ -85,29 +90,8 @@
         const storage = firebase.storage();
         const auth = firebase.auth();
 
-        async function startQRScanner(waiterId) {
-            try {
-                const codeReader = new ZXing.BrowserQRCodeReader();
-                const videoInputDevices = await codeReader.listVideoInputDevices();
-                const selectedDeviceId = videoInputDevices[0].deviceId;
-                const video = document.getElementById('video');
-                video.style.display = 'block';
-
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: selectedDeviceId } });
-                video.srcObject = stream;
-
-                const result = await codeReader.decodeOnceFromVideoDevice(selectedDeviceId, 'video');
-                alert('Scanned QR code: ' + result.text);
-
-                stream.getTracks().forEach(track => track.stop());
-                video.style.display = 'none';
-                $('#qrCodeModal').modal('hide');
-
-            } catch (error) {
-                console.error('QR code scanning error:', error);
-                alert('Failed to scan QR code. Please try again.');
-            }
-        }
+        let codeReader = null;
+        let currentStream = null;
 
         function fetchWaitersWithPhotos() {
             const waitersList = document.getElementById('waitersList');
@@ -128,7 +112,6 @@
                         <div class="mt-2">
                             <button onclick="requestAmount('${doc.id}')">Pay Now</button>
                             <button onclick="toggleMessageForm('${doc.id}')">Send Message</button>
-                            <button onclick="startQRScanner('${doc.id}')">Scan QR Code</button>
                         </div>
                         <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
                             <textarea name="message" class="form-control mb-2" rows="3" placeholder="Type your message here" required></textarea>
@@ -137,6 +120,8 @@
                         <form id="paymentForm-${doc.id}" class="payment-form" style="display: none;">
                             <input type="number" id="amount-${doc.id}" class="form-control mb-2" placeholder="Enter amount" required>
                             <button type="button" onclick="initiatePayment('${upiLink}', '${doc.id}')">Proceed</button>
+                            <button type="button" onclick="scanQRCode('${upiLink}')">Scan QR Code</button>
+                            <canvas id="qrCanvas-${doc.id}" style="display: none;"></canvas>
                         </form>
                     `;
                     waitersList.appendChild(waiterCard);
@@ -177,75 +162,80 @@
             }
             const fullUpiLink = `${upiLink}&am=${amount}`;
             console.log(fullUpiLink);
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            if (isMobile) {
-                window.location.href = fullUpiLink;
-            } else {
-                generateQRCode(fullUpiLink, amount, waiterId);
+            generateQRCode(fullUpiLink, waiterId);
+        }
+
+        function generateQRCode(upiLink, waiterId) {
+            const qrCanvas = document.getElementById(`qrCanvas-${waiterId}`);
+            const qr = new QRious({
+                element: qrCanvas,
+                value: upiLink,
+                size: 200
+            });
+            qrCanvas.style.display = 'block';
+            qrCanvas.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function scanQRCode(upiLink) {
+            if (!codeReader) {
+                codeReader = new ZXing.BrowserQRCodeReader();
             }
-            const paymentForm = document.getElementById(`paymentForm-${waiterId}`);
-            if (paymentForm) {
-                paymentForm.style.display = 'none';
+
+            const videoInputDevices = await codeReader.listVideoInputDevices();
+            const selectedDeviceId = videoInputDevices[0].deviceId;
+
+            const video = document.getElementById('video');
+            video.style.display = 'block';
+
+            try {
+                const result = await codeReader.decodeFromInputVideoDevice(selectedDeviceId, video);
+                console.log('Scanned QR code:', result.text);
+                window.location.href = result.text;
+            } catch (error) {
+                console.error('QR code scanning error:', error);
+                alert('Failed to scan QR code. Please try again.');
+            } finally {
+                stopScanner();
             }
         }
 
-        function generateQRCode(upiLink, amount, waiterId) {
-            const qrCodeModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+        function stopScanner() {
             const video = document.getElementById('video');
-            video.style.display = 'none';
-            const qrCodeCanvas = document.createElement('canvas');
-            new QRious({
-                element: qrCodeCanvas,
-                value: upiLink,
-                size: 300
-            });
-            const qrCodeImage = new Image();
-            qrCodeImage.src = qrCodeCanvas.toDataURL();
-            qrCodeImage.alt = 'QR Code';
-            qrCodeImage.onload = () => {
-                qrCodeModal.show();
-            };
-            const modalBody = document.querySelector('#qrCodeModal .modal-body');
-            modalBody.innerHTML = '';
-            modalBody.appendChild(qrCodeImage);
+            if (video) {
+                video.pause();
+                video.srcObject = null;
+                video.style.display = 'none';
+            }
+
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+                currentStream = null;
+            }
         }
 
         function sendMessage(event, waiterEmail) {
             event.preventDefault();
-            const messageForm = event.target;
-            const message = messageForm.message.value.trim();
-            if (!message) {
-                alert('Please enter a message.');
-                return;
-            }
-            const userEmail = firebase.auth().currentUser.email;
-            console.log('Sending message:', message, 'to:', waiterEmail, 'from:', userEmail);
-            alert('Message sent successfully!');
-            messageForm.reset();
-            toggleMessageForm();
+            const message = event.target.message.value;
+            console.log(`Sending message to ${waiterEmail}: ${message}`);
+            alert(`Message sent to ${waiterEmail}: ${message}`);
         }
 
         function searchWaiters() {
-            const input = document.getElementById('searchInput').value.toUpperCase();
-            const waiters = document.getElementById('waitersList').getElementsByClassName('waiter-card');
-            Array.from(waiters).forEach((waiterCard) => {
-                const name = waiterCard.getElementsByTagName('h3')[0].innerText.toUpperCase();
-                const restaurant = waiterCard.getElementsByTagName('p')[1].innerText.toUpperCase();
-                if (name.indexOf(input) > -1 || restaurant.indexOf(input) > -1) {
-                    waiterCard.style.display = '';
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const waiters = document.querySelectorAll('.waiter-card');
+            waiters.forEach(waiter => {
+                const name = waiter.querySelector('h3').innerText.toLowerCase();
+                const restaurant = waiter.querySelector('p:nth-of-type(2)').innerText.toLowerCase();
+                if (name.includes(searchInput) || restaurant.includes(searchInput)) {
+                    waiter.style.display = 'block';
                 } else {
-                    waiterCard.style.display = 'none';
+                    waiter.style.display = 'none';
                 }
             });
         }
 
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                console.log('User logged in:', user.email);
-                fetchWaitersWithPhotos();
-            } else {
-                console.log('No user logged in.');
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchWaitersWithPhotos();
         });
     </script>
 </body>
