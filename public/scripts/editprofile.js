@@ -20,19 +20,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const userData = userDoc.data();
         editProfileForm.name.value = userData.name || '';
         editProfileForm.email.value = userData.email || '';
-        editProfileForm['payment-id'].value = userData.paymentId || '';
+        
       }
 
       editProfileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = e.target.name.value;
         const email = e.target.email.value;
-        const paymentId = e.target['payment-id'].value;
+        
         const profilePhoto = e.target['profile-photo'].files[0];
 
         const updates = {};
         if (name) updates.name = name;
-        if (paymentId) updates.paymentId = paymentId;
+        
 
         try {
           if (email) {

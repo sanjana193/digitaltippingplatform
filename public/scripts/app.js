@@ -1,10 +1,5 @@
-// Import Firebase modules
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js";
-
 // Firebase configuration
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
   authDomain: "digitaltipping.firebaseapp.com",
   projectId: "digitaltipping",
@@ -15,42 +10,50 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+firebase.initializeApp(firebaseConfig);
 
-// Fetch user profile data
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        const userId = user.uid;
-        const userDocRef = doc(db, 'users', userId);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            document.getElementById('user-name').textContent = userData.name;
-            document.getElementById('user-email').textContent = userData.email;
-            document.getElementById('points').textContent = `Points Earned: ${userData.loyaltyPoints}`;
+// Get references to Firebase services
+var auth = firebase.auth();
+var firestore = firebase.firestore();
+var storage = firebase.storage();
 
-            // Profile photo
-            const profilePhoto = document.getElementById('profile-photo');
-            if (userData.profilePhotoURL) {
-                profilePhoto.src = userData.profilePhotoURL;
-            }
-        } else {
-            console.log('No such document!');
-        }
+// Function to fetch user data from Firestore
+function fetchUserData(userId) {
+  var userRef = firestore.collection("users").doc(userId);
+
+  userRef.get().then(function(doc) {
+    if (doc.exists) {
+      var userData = doc.data();
+      // Update profile section in HTML
+      updateProfile(userData);
     } else {
-        console.log('No user is signed in.');
+      console.log("No such document!");
     }
-});
+  }).catch(function(error) {
+    console.log("Error getting document:", error);
+  });
+}
 
-// Log out function
-document.querySelector('.logout').addEventListener('click', async () => {
-    try {
-        await signOut(auth);
-        alert('User signed out successfully');
-        window.location.reload();  // Optionally, you can redirect the user to a login page
-    } catch (error) {
-        console.error('Error signing out:', error);
-    }
+// Function to update profile section in HTML
+function updateProfile(userData) {
+  var profilePhotoElement = document.getElementById("profile-photo");
+  var profileNameElement = document.getElementById("user-name");
+  var profileEmailElement = document.getElementById("user-email");
+  var loyaltyPointsElement = document.getElementById("loyaltyPoints");
+
+  profilePhotoElement.src = userData.profilePhoto || "images/default-profile.png";
+  profileNameElement.textContent = userData.name || "Name";
+  profileEmailElement.textContent = userData.email || "Email";
+  loyaltyPointsElement.textContent = userData.loyaltyPoints || "0";
+}
+
+// Monitor authentication state changes
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    // User is signed in, fetch user data
+    fetchUserData(user.uid);
+  } else {
+    // No user is signed in
+    console.log("No user signed in.");
+  }
 });
