@@ -68,8 +68,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- Include ZXing library -->
-    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <!-- Include jsQR library -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
@@ -84,9 +84,6 @@
         const db = firebase.firestore();
         const storage = firebase.storage();
         const auth = firebase.auth();
-
-        let codeReader = null;
-        let currentStream = null;
 
         function fetchWaitersWithPhotos() {
             const waitersList = document.getElementById('waitersList');
@@ -175,18 +172,15 @@
             const qrCanvas = document.getElementById(`qrCanvas-${waiterId}`);
             const context = qrCanvas.getContext('2d');
             const imageData = context.getImageData(0, 0, qrCanvas.width, qrCanvas.height);
+            const code = jsQR(imageData.data, qrCanvas.width, qrCanvas.height);
 
-            if (!codeReader) {
-                codeReader = new ZXing.BrowserQRCodeReader();
-            }
-
-            codeReader.decodeFromImageData(imageData).then(result => {
-                console.log('Scanned QR code:', result.text);
-                window.location.href = result.text;
-            }).catch(err => {
-                console.error('Failed to scan QR code:', err);
+            if (code) {
+                console.log('Scanned QR code:', code.data);
+                window.location.href = code.data;
+            } else {
+                console.error('Failed to scan QR code.');
                 alert('Failed to scan QR code. Please try again.');
-            });
+            }
         }
 
         function sendMessage(event, waiterEmail) {
