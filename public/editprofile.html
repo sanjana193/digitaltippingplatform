@@ -3,26 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Profile</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Edit Profile - EasyTip</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: black;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        
+        .btn-primary:hover {
+            background-color: #ff004f;
+        }
+        .shadow-sm {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        .bg-light {
+            background-color: #ffffff !important;
+        }
+    </style>
 </head>
 <body>
-    <h1>Edit Profile</h1>
-    <form id="edit-profile-form">
-        <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required><br>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4" style="color: #ffffff;">Edit Profile</h1>
+        <form id="edit-profile-form" class="p-4 border rounded shadow-sm bg-light">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+         
+            <div class="form-group">
+                <label for="profile-photo">Profile Photo:</label>
+                <input type="file" class="form-control-file" id="profile-photo" name="profile-photo">
+            </div>
+            <button type="submit" class="btn btn-block" style="color: white; background-color: #ff004f;">Update Profile</button>
+        </form>
+    </div>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br>
-
-       
-
-        <label for="profile-photo">Profile Photo:</label>
-        <input type="file" id="profile-photo" name="profile-photo"><br>
-
-        <button type="submit">Update Profile</button>
-    </form>
-
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script type="module" src="scripts/editprofile.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waiter Page with QR Code Payment</title>
+    <title>Waiter Page with QR Code Payment and Reviews</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .waiter-card {
@@ -39,6 +39,12 @@
             height: 200px;
             margin: 20px auto;
             display: none;
+        }
+        .reviews-list {
+            margin-top: 10px;
+        }
+        .rating-input {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -85,12 +91,12 @@
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
-  authDomain: "digitaltipping.firebaseapp.com",
-  projectId: "digitaltipping",
-  storageBucket: "digitaltipping.appspot.com",
-  messagingSenderId: "1028902624608",
-  appId: "1:1028902624608:web:101410a2bbd20316701205",
-  measurementId: "G-HHTG6R4CH6"
+    authDomain: "digitaltipping.firebaseapp.com",
+    projectId: "digitaltipping",
+    storageBucket: "digitaltipping.appspot.com",
+    messagingSenderId: "1028902624608",
+    appId: "1:1028902624608:web:101410a2bbd20316701205",
+    measurementId: "G-HHTG6R4CH6"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -110,17 +116,25 @@
                         <h3>${waiter.name}</h3>
                         <p>Email: ${waiter.email}</p>
                         <p>Restaurant: ${waiter.restaurant || 'Restaurant Name Not Provided'}</p>
+                        <p>Average Rating: <span id="averageRating-${doc.id}">Loading...</span></p>
                         <div id="paymentButtons-${doc.id}"></div>
                         <div class="mt-2">
                             <button onclick="showTipModal('${waiter.paymentid}', '${doc.id}')">Send Tip</button>
                             <button onclick="toggleMessageForm('${doc.id}')">Send Message</button>
+                            <button onclick="giveReview('${doc.id}')">Give Review</button>
+                            <button onclick="showReviews('${doc.id}')">Show Reviews</button>
                         </div>
+                        
                         <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
                             <textarea name="message" class="form-control mb-2" rows="3" placeholder="Type your message here" required></textarea>
                             <button type="submit" class="btn btn-primary">Send</button>
                         </form>
+                        <div id="reviews-${doc.id}" class="reviews-list"></div>
                     `;
                     waitersList.appendChild(waiterCard);
+
+                    // Fetch and display average rating
+                    fetchAverageRating(doc.id);
                 });
             }).catch((error) => {
                 console.error('Error fetching waiters with profile photos: ', error);
@@ -212,33 +226,138 @@
                window.open(upiLink);
    }
 
-        function sendMessage(event, waiterEmail) {
-            event.preventDefault();
-            const message = event.target.message.value.trim();
-            if (message === '') {
-                alert('Please enter a valid message.');
-                return;
-            }
-            alert('Message sent successfully to ' + waiterEmail + ': ' + message);
-            event.target.reset();
-            toggleMessageForm(waiterId); // Assuming `waiterId` is defined somewhere
-            // Implement code to send message to waiter via email or other means
-        }
 
-        function searchWaiters() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const cards = document.getElementsByClassName('waiter-card');
-            Array.from(cards).forEach((card) => {
-                const text = card.innerText.toLowerCase();
-                card.style.display = text.includes(input) ? 'block' : 'none';
+
+
+        function saveRating(waiterId, rating) {
+            db.collection('waiters').doc(waiterId).collection('ratings').add({
+                rating: rating,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                console.log('Rating saved successfully.');
+                fetchAverageRating(waiterId); // Update average rating after saving
+            }).catch((error) => {
+                console.error('Error saving rating: ', error);
             });
         }
 
-        // Fetch waiters data when page loads
-        document.addEventListener('DOMContentLoaded', function () {
-            fetchWaitersWithPhotos();
-        });
+        function fetchAverageRating(waiterId) {
+            const averageRatingElement = document.getElementById(`averageRating-${waiterId}`);
+            db.collection('waiters').doc(waiterId).collection('ratings').get().then((querySnapshot) => {
+                let totalRating = 0;
+                let count = 0;
+                querySnapshot.forEach((doc) => {
+                    const ratingData = doc.data();
+                    totalRating += ratingData.rating;
+                    count++;
+                });
 
+                if (count > 0) {
+                    const averageRating = totalRating / count;
+                    averageRatingElement.innerText = averageRating.toFixed(1);
+                } else {
+                    averageRatingElement.innerText = 'No ratings yet';
+                }
+            }).catch((error) => {
+                console.error('Error fetching ratings: ', error);
+                averageRatingElement.innerText = 'Error fetching ratings';
+            });
+        }
+
+        function giveReview(waiterId) {
+            const reviewsDiv = document.getElementById(`reviews-${waiterId}`);
+            if (!reviewsDiv) {
+                console.error('Reviews div not found.');
+                return;
+            }
+
+            reviewsDiv.innerHTML = `
+                <h5>Give Review</h5>
+                <div class="rating-input">
+                    <label for="rating-${waiterId}">Rating (0-10):</label>
+                    <input type="number" id="rating-${waiterId}" class="form-control" min="0" max="10" required>
+                </div>
+                <button onclick="submitReview('${waiterId}')" class="btn btn-primary">Submit Review</button>
+            `;
+        }
+
+        function submitReview(waiterId) {
+            const ratingInput = document.getElementById(`rating-${waiterId}`);
+            if (!ratingInput) {
+                console.error('Rating input not found.');
+                return;
+            }
+
+            const rating = ratingInput.value.trim();
+            if (rating === '') {
+                alert('Please enter a rating (0-10).');
+                return;
+            }
+
+            saveRating(waiterId, parseInt(rating, 10));
+            // Optionally, you can also save the review text to Firestore.
+            // Example: db.collection('waiters').doc(waiterId).collection('reviews').add({ text: reviewText });
+        }
+
+        function showReviews(waiterId) {
+            const reviewsDiv = document.getElementById(`reviews-${waiterId}`);
+            if (!reviewsDiv) {
+                console.error('Reviews div not found.');
+                return;
+            }
+
+            reviewsDiv.innerHTML = '<h5>Reviews</h5>';
+
+            db.collection('waiters').doc(waiterId).collection('ratings').get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    const ratingData = doc.data();
+                    reviewsDiv.innerHTML += `
+                        <p>Rating: ${ratingData.rating}</p>
+                        <p>Timestamp: ${ratingData.timestamp.toDate()}</p>
+                        <hr>
+                    `;
+                });
+            }).catch((error) => {
+                console.error('Error fetching reviews: ', error);
+                reviewsDiv.innerHTML = '<p>Error fetching reviews</p>';
+            });
+        }
+
+        function sendMessage(event, recipientEmail) {
+            event.preventDefault();
+            const form = event.target;
+            const message = form.message.value.trim();
+            if (message === '') {
+                alert('Please enter a message.');
+                return;
+            }
+
+            // Here you can implement sending messages via Firebase Cloud Messaging (FCM) or other services.
+            console.log('Sending message to: ', recipientEmail, ' Message: ', message);
+            form.reset();
+            toggleMessageForm(recipientEmail.split('@')[0]); // Example: Toggle message form for 'recipientEmail'
+        }
+
+        function searchWaiters() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const waitersList = document.getElementById('waitersList');
+            const waiterCards = waitersList.getElementsByClassName('waiter-card');
+            Array.from(waiterCards).forEach((card) => {
+                const name = card.getElementsByTagName('h3')[0].innerText.toLowerCase();
+                const restaurant = card.getElementsByTagName('p')[1].innerText.toLowerCase().replace('restaurant: ', '');
+                if (name.includes(searchInput) || restaurant.includes(searchInput)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+
+
+
+        // Fetch and display waiters with profile photos on page load
+        fetchWaitersWithPhotos();
     </script>
 </body>
 </html>
