@@ -90,15 +90,15 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <script>
+  <script>
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
-  authDomain: "digitaltipping.firebaseapp.com",
-  projectId: "digitaltipping",
-  storageBucket: "digitaltipping.appspot.com",
-  messagingSenderId: "1028902624608",
-  appId: "1:1028902624608:web:101410a2bbd20316701205",
-  measurementId: "G-HHTG6R4CH6"
+            authDomain: "digitaltipping.firebaseapp.com",
+            projectId: "digitaltipping",
+            storageBucket: "digitaltipping.appspot.com",
+            messagingSenderId: "1028902624608",
+            appId: "1:1028902624608:web:101410a2bbd20316701205",
+            measurementId: "G-HHTG6R4CH6"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -117,7 +117,7 @@
                         <img src="${profilePicPath}" alt="Profile Picture" class="profile-pic">
                         <h3>${waiter.name}</h3>
                         <p>Email: ${waiter.email}</p>
-                        <p>Restaurant: ${waiter.restaurant || 'Restaurant Name Not Provided'}</p>
+                        <p>Restaurant: <a href="${waiter.restaurantLink}" target="_blank">${waiter.restaurant || 'Restaurant Name Not Provided'}</a></p>
                         <p>Average Rating: <span id="averageRating-${doc.id}">Loading...</span></p>
                         <div id="paymentButtons-${doc.id}"></div>
                         <div class="mt-2">
@@ -206,139 +206,102 @@
         function scanQRCodeFromCanvas(canvas) {
             const context = canvas.getContext('2d');
             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
             if (code) {
-                console.log('QR code data:', code.data);
+                alert(`QR Code detected: ${code.data}`);
             } else {
-                console.log('No QR code found.');
-            }
-        }
-
-        function simulatePayment(paymentId, waiterId, tipAmount) {
-            var options = {
-                "key": "rzp_test_ZSzFKZBuOxUtdl", // Enter the Key ID generated from the Dashboard
-                "amount": tipAmount * 100, // Amount is in currency subunits (paise in case of INR)
-                "currency": "INR",
-                "name": "EasyTip Platform",
-                "description": "Tip Payment",
-                "image": "https://example.com/your_logo",
-                "handler": function (response) {
-                    alert("Payment Successful!");
-                    // Handle payment success logic
-                },
-                "prefill": {
-                    "name": "Customer Name",
-                    "email": "customer@example.com",
-                    "contact": "9999999999"
-                },
-                "notes": {
-                    "address": "Razorpay Corporate Office"
-                },
-                "theme": {
-                    "color": "#F37254"
-                }
-            };
-
-            var rzp1 = new Razorpay(options);
-            rzp1.open();
-
-            rzp1.on('payment.failed', function (response) {
-                alert("Payment Failed: " + response.error.description);
-                // Handle payment failure logic
-            });
-        }
-
-        function fetchAverageRating(waiterId) {
-            db.collection('reviews')
-                .where('waiterId', '==', waiterId)
-                .get()
-                .then((querySnapshot) => {
-                    let totalRating = 0;
-                    let ratingCount = 0;
-                    querySnapshot.forEach((doc) => {
-                        const review = doc.data();
-                        totalRating += review.rating;
-                        ratingCount++;
-                    });
-                    const averageRating = ratingCount > 0 ? (totalRating / ratingCount).toFixed(1) : 'No reviews';
-                    document.getElementById(`averageRating-${waiterId}`).innerText = averageRating;
-                })
-                .catch((error) => {
-                    console.error('Error fetching reviews: ', error);
-                    document.getElementById(`averageRating-${waiterId}`).innerText = 'Error';
-                });
-        }
-
-        function giveReview(waiterId) {
-            const rating = prompt('Enter a rating (1-5):');
-            const review = prompt('Enter your review:');
-            if (rating && review) {
-                db.collection('reviews').add({
-                    waiterId: waiterId,
-                    rating: parseInt(rating),
-                    review: review,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    alert('Review submitted successfully.');
-                }).catch((error) => {
-                    console.error('Error submitting review: ', error);
-                });
-            }
-        }
-
-        function showReviews(waiterId) {
-            const reviewsContainer = document.getElementById(`reviews-${waiterId}`);
-            if (reviewsContainer) {
-                reviewsContainer.innerHTML = '';
-                db.collection('reviews')
-                    .where('waiterId', '==', waiterId)
-                    .get()
-                    .then((querySnapshot) => {
-                        querySnapshot.forEach((doc) => {
-                            const review = doc.data();
-                            const reviewElement = document.createElement('div');
-                            reviewElement.classList.add('review');
-                            reviewElement.innerHTML = `
-                                <p><strong>Rating:</strong> ${review.rating}</p>
-                                <p><strong>Review:</strong> ${review.review}</p>
-                                <hr>
-                            `;
-                            reviewsContainer.appendChild(reviewElement);
-                        });
-                    })
-                    .catch((error) => {
-                        console.error('Error fetching reviews: ', error);
-                    });
-            }
-        }
-
-        function sendMessage(event, waiterEmail) {
-            event.preventDefault();
-            const message = event.target.message.value.trim();
-            if (message) {
-                // Here you can use your email sending service logic
-                alert(`Message sent to ${waiterEmail}: ${message}`);
-                event.target.reset();
+                alert('No QR code detected.');
             }
         }
 
         function searchWaiters() {
-            const searchInput = document.getElementById('searchInput').value.toLowerCase();
-            const waitersList = document.getElementById('waitersList');
-            const waiters = waitersList.getElementsByClassName('waiter-card');
-
-            Array.from(waiters).forEach(waiter => {
-                const name = waiter.querySelector('h3').innerText.toLowerCase();
-                const restaurant = waiter.querySelector('p:nth-child(4)').innerText.toLowerCase();
-                if (name.includes(searchInput) || restaurant.includes(searchInput)) {
-                    waiter.style.display = '';
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const waiterCards = document.getElementsByClassName('waiter-card');
+            Array.from(waiterCards).forEach(card => {
+                const name = card.querySelector('h3').innerText.toLowerCase();
+                const restaurant = card.querySelector('p a').innerText.toLowerCase();
+                if (name.includes(filter) || restaurant.includes(filter)) {
+                    card.style.display = '';
                 } else {
-                    waiter.style.display = 'none';
+                    card.style.display = 'none';
                 }
             });
         }
 
-        fetchWaitersWithPhotos();
+        function giveReview(waiterId) {
+            const review = prompt('Enter your review:');
+            if (review) {
+                const rating = prompt('Enter your rating (0-10):');
+                const ratingValue = parseInt(rating);
+                if (!isNaN(ratingValue) && ratingValue >= 0 && ratingValue <= 10) {
+                    db.collection('waiters').doc(waiterId).collection('reviews').add({
+                        review: review,
+                        rating: ratingValue,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        alert('Review submitted successfully.');
+                        fetchAverageRating(waiterId);
+                    }).catch((error) => {
+                        console.error('Error submitting review: ', error);
+                    });
+                } else {
+                    alert('Invalid rating. Please enter a number between 0 and 10.');
+                }
+            }
+        }
+
+        function showReviews(waiterId) {
+            const reviewsList = document.getElementById(`reviews-${waiterId}`);
+            reviewsList.innerHTML = '';
+            db.collection('waiters').doc(waiterId).collection('reviews').orderBy('timestamp', 'desc').get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    const reviewData = doc.data();
+                    const reviewItem = document.createElement('div');
+                    reviewItem.classList.add('review-item');
+                    reviewItem.innerHTML = `
+                        <p>${reviewData.review}</p>
+                        <p>Rating: ${reviewData.rating}</p>
+                        <p>Date: ${new Date(reviewData.timestamp.toDate()).toLocaleString()}</p>
+                    `;
+                    reviewsList.appendChild(reviewItem);
+                });
+            }).catch((error) => {
+                console.error('Error fetching reviews: ', error);
+            });
+        }
+
+        function fetchAverageRating(waiterId) {
+            db.collection('waiters').doc(waiterId).collection('reviews').get().then((querySnapshot) => {
+                let totalRating = 0;
+                let reviewCount = 0;
+                querySnapshot.forEach((doc) => {
+                    totalRating += doc.data().rating;
+                    reviewCount++;
+                });
+                const averageRating = reviewCount > 0 ? (totalRating / reviewCount).toFixed(1) : 'No ratings yet';
+                document.getElementById(`averageRating-${waiterId}`).innerText = averageRating;
+            }).catch((error) => {
+                console.error('Error calculating average rating: ', error);
+            });
+        }
+
+        function sendMessage(event, email) {
+            event.preventDefault();
+            const form = event.target;
+            const message = form.elements.message.value;
+
+            // Construct the mailto URL with email and message
+            const mailtoUrl = `mailto:${email}?subject=Message%20from%20Customer&body=${encodeURIComponent(message)}`;
+
+            // Open the default email client
+            window.location.href = mailtoUrl;
+
+            form.reset(); // Reset form after submission
+        }
+
+
+        document.addEventListener('DOMContentLoaded', fetchWaitersWithPhotos);
     </script>
 </body>
 </html>
