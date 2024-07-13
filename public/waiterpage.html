@@ -235,13 +235,28 @@
         function scanQRCodeFromCanvas(canvas) {
             const context = canvas.getContext('2d');
             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
             if (code) {
-                alert(`QR Code detected: ${code.data}`);
+                console.log('QR Code scanned successfully:', code.data);
+                alert('QR Code scanned successfully: ' + code.data);
+                simulatePayment(code.data);
             } else {
-                alert('No QR code detected.');
+                console.error('No QR code found.');
+                alert('No QR code found. Please try again.');
             }
         }
+
+        function simulatePayment(qrData) {
+            // Simulate payment process
+            console.log('Simulating payment process for QR data:', qrData);
+            alert('Simulating payment process for QR data: ' + qrData);
+            // Implement your actual payment logic here
+            const upiLink = qrData; // Assuming qrData is the UPI payment link scanned from the QR code
+
+// Open the UPI payment link in a new window (for web applications)
+               window.open(upiLink);
+   }
+
 
         function searchWaiters() {
             const input = document.getElementById('searchInput');
