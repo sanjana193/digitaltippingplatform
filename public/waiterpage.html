@@ -88,15 +88,17 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
-    authDomain: "digitaltipping.firebaseapp.com",
-    projectId: "digitaltipping",
-    storageBucket: "digitaltipping.appspot.com",
-    messagingSenderId: "1028902624608",
-    appId: "1:1028902624608:web:101410a2bbd20316701205",
-    measurementId: "G-HHTG6R4CH6"
+  authDomain: "digitaltipping.firebaseapp.com",
+  projectId: "digitaltipping",
+  storageBucket: "digitaltipping.appspot.com",
+  messagingSenderId: "1028902624608",
+  appId: "1:1028902624608:web:101410a2bbd20316701205",
+  measurementId: "G-HHTG6R4CH6"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -206,159 +208,136 @@
             const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, canvas.width, canvas.height);
             if (code) {
-                console.log('QR Code scanned successfully:', code.data);
-                alert('QR Code scanned successfully: ' + code.data);
-                simulatePayment(code.data);
+                console.log('QR code data:', code.data);
             } else {
-                console.error('No QR code found.');
-                alert('No QR code found. Please try again.');
+                console.log('No QR code found.');
             }
         }
 
-        function simulatePayment(qrData) {
-            // Simulate payment process
-            console.log('Simulating payment process for QR data:', qrData);
-            alert('Simulating payment process for QR data: ' + qrData);
-            // Implement your actual payment logic here
-            const upiLink = qrData; // Assuming qrData is the UPI payment link scanned from the QR code
+        function simulatePayment(paymentId, waiterId, tipAmount) {
+            var options = {
+                "key": "rzp_test_ZSzFKZBuOxUtdl", // Enter the Key ID generated from the Dashboard
+                "amount": tipAmount * 100, // Amount is in currency subunits (paise in case of INR)
+                "currency": "INR",
+                "name": "EasyTip Platform",
+                "description": "Tip Payment",
+                "image": "https://example.com/your_logo",
+                "handler": function (response) {
+                    alert("Payment Successful!");
+                    // Handle payment success logic
+                },
+                "prefill": {
+                    "name": "Customer Name",
+                    "email": "customer@example.com",
+                    "contact": "9999999999"
+                },
+                "notes": {
+                    "address": "Razorpay Corporate Office"
+                },
+                "theme": {
+                    "color": "#F37254"
+                }
+            };
 
-// Open the UPI payment link in a new window (for web applications)
-               window.open(upiLink);
-   }
+            var rzp1 = new Razorpay(options);
+            rzp1.open();
 
-
-
-
-        function saveRating(waiterId, rating) {
-            db.collection('waiters').doc(waiterId).collection('ratings').add({
-                rating: rating,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(() => {
-                console.log('Rating saved successfully.');
-                fetchAverageRating(waiterId); // Update average rating after saving
-            }).catch((error) => {
-                console.error('Error saving rating: ', error);
+            rzp1.on('payment.failed', function (response) {
+                alert("Payment Failed: " + response.error.description);
+                // Handle payment failure logic
             });
         }
 
         function fetchAverageRating(waiterId) {
-            const averageRatingElement = document.getElementById(`averageRating-${waiterId}`);
-            db.collection('waiters').doc(waiterId).collection('ratings').get().then((querySnapshot) => {
-                let totalRating = 0;
-                let count = 0;
-                querySnapshot.forEach((doc) => {
-                    const ratingData = doc.data();
-                    totalRating += ratingData.rating;
-                    count++;
+            db.collection('reviews')
+                .where('waiterId', '==', waiterId)
+                .get()
+                .then((querySnapshot) => {
+                    let totalRating = 0;
+                    let ratingCount = 0;
+                    querySnapshot.forEach((doc) => {
+                        const review = doc.data();
+                        totalRating += review.rating;
+                        ratingCount++;
+                    });
+                    const averageRating = ratingCount > 0 ? (totalRating / ratingCount).toFixed(1) : 'No reviews';
+                    document.getElementById(`averageRating-${waiterId}`).innerText = averageRating;
+                })
+                .catch((error) => {
+                    console.error('Error fetching reviews: ', error);
+                    document.getElementById(`averageRating-${waiterId}`).innerText = 'Error';
                 });
-
-                if (count > 0) {
-                    const averageRating = totalRating / count;
-                    averageRatingElement.innerText = averageRating.toFixed(1);
-                } else {
-                    averageRatingElement.innerText = 'No ratings yet';
-                }
-            }).catch((error) => {
-                console.error('Error fetching ratings: ', error);
-                averageRatingElement.innerText = 'Error fetching ratings';
-            });
         }
 
         function giveReview(waiterId) {
-            const reviewsDiv = document.getElementById(`reviews-${waiterId}`);
-            if (!reviewsDiv) {
-                console.error('Reviews div not found.');
-                return;
+            const rating = prompt('Enter a rating (1-5):');
+            const review = prompt('Enter your review:');
+            if (rating && review) {
+                db.collection('reviews').add({
+                    waiterId: waiterId,
+                    rating: parseInt(rating),
+                    review: review,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    alert('Review submitted successfully.');
+                }).catch((error) => {
+                    console.error('Error submitting review: ', error);
+                });
             }
-
-            reviewsDiv.innerHTML = `
-                <h5>Give Review</h5>
-                <div class="rating-input">
-                    <label for="rating-${waiterId}">Rating (0-10):</label>
-                    <input type="number" id="rating-${waiterId}" class="form-control" min="0" max="10" required>
-                </div>
-                <button onclick="submitReview('${waiterId}')" class="btn btn-primary">Submit Review</button>
-            `;
-        }
-
-        function submitReview(waiterId) {
-            const ratingInput = document.getElementById(`rating-${waiterId}`);
-            if (!ratingInput) {
-                console.error('Rating input not found.');
-                return;
-            }
-
-            const rating = ratingInput.value.trim();
-            if (rating === '') {
-                alert('Please enter a rating (0-10).');
-                return;
-            }
-
-            saveRating(waiterId, parseInt(rating, 10));
-            // Optionally, you can also save the review text to Firestore.
-            // Example: db.collection('waiters').doc(waiterId).collection('reviews').add({ text: reviewText });
         }
 
         function showReviews(waiterId) {
-            const reviewsDiv = document.getElementById(`reviews-${waiterId}`);
-            if (!reviewsDiv) {
-                console.error('Reviews div not found.');
-                return;
+            const reviewsContainer = document.getElementById(`reviews-${waiterId}`);
+            if (reviewsContainer) {
+                reviewsContainer.innerHTML = '';
+                db.collection('reviews')
+                    .where('waiterId', '==', waiterId)
+                    .get()
+                    .then((querySnapshot) => {
+                        querySnapshot.forEach((doc) => {
+                            const review = doc.data();
+                            const reviewElement = document.createElement('div');
+                            reviewElement.classList.add('review');
+                            reviewElement.innerHTML = `
+                                <p><strong>Rating:</strong> ${review.rating}</p>
+                                <p><strong>Review:</strong> ${review.review}</p>
+                                <hr>
+                            `;
+                            reviewsContainer.appendChild(reviewElement);
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('Error fetching reviews: ', error);
+                    });
             }
-
-            reviewsDiv.innerHTML = '<h5>Reviews</h5>';
-
-            db.collection('waiters').doc(waiterId).collection('ratings').get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    const ratingData = doc.data();
-                    reviewsDiv.innerHTML += `
-                        <p>Rating: ${ratingData.rating}</p>
-                        <p>Timestamp: ${ratingData.timestamp.toDate()}</p>
-                        <hr>
-                    `;
-                });
-            }).catch((error) => {
-                console.error('Error fetching reviews: ', error);
-                reviewsDiv.innerHTML = '<p>Error fetching reviews</p>';
-            });
         }
-        function sendMessage(event, email) {
+
+        function sendMessage(event, waiterEmail) {
             event.preventDefault();
-            const form = event.target;
-            const message = form.elements.message.value;
-
-            // Construct the mailto URL with email and message
-            const mailtoUrl = `mailto:${email}?subject=Message%20from%20Customer&body=${encodeURIComponent(message)}`;
-
-            // Open the default email client
-            window.location.href = mailtoUrl;
-
-            form.reset(); // Reset form after submission
+            const message = event.target.message.value.trim();
+            if (message) {
+                // Here you can use your email sending service logic
+                alert(`Message sent to ${waiterEmail}: ${message}`);
+                event.target.reset();
+            }
         }
-
-
-
-
 
         function searchWaiters() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
             const waitersList = document.getElementById('waitersList');
-            const waiterCards = waitersList.getElementsByClassName('waiter-card');
-            Array.from(waiterCards).forEach((card) => {
-                const name = card.getElementsByTagName('h3')[0].innerText.toLowerCase();
-                const restaurant = card.getElementsByTagName('p')[1].innerText.toLowerCase().replace('restaurant: ', '');
+            const waiters = waitersList.getElementsByClassName('waiter-card');
+
+            Array.from(waiters).forEach(waiter => {
+                const name = waiter.querySelector('h3').innerText.toLowerCase();
+                const restaurant = waiter.querySelector('p:nth-child(4)').innerText.toLowerCase();
                 if (name.includes(searchInput) || restaurant.includes(searchInput)) {
-                    card.style.display = 'block';
+                    waiter.style.display = '';
                 } else {
-                    card.style.display = 'none';
+                    waiter.style.display = 'none';
                 }
             });
         }
 
-
-
-
-        // Fetch and display waiters with profile photos on page load
         fetchWaitersWithPhotos();
     </script>
 </body>
