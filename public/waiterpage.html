@@ -6,51 +6,80 @@
     <title>Waiter Page with QR Code Payment and Reviews</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {
+            background-color: #000000;
+            color: #fff;
+        }
+    
         .waiter-card {
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 10px;
             margin: 10px;
             width: 300px;
+            background-color: #333;
         }
+    
         .profile-pic {
             width: 100%;
             height: auto;
             border-radius: 8px;
         }
+    
         .search-bar {
             margin: 20px 0;
         }
+    
         .message-form {
             display: none;
             margin-top: 10px;
         }
+    
         .payment-form {
             margin-top: 10px;
         }
+    
         #video {
             width: 100%;
             max-width: 300px;
             margin: 10px auto;
             display: none;
         }
+    
         #qrCanvas {
             width: 200px;
             height: 200px;
             margin: 20px auto;
             display: none;
         }
+    
         .reviews-list {
             margin-top: 10px;
         }
+    
         .rating-input {
             margin-bottom: 10px;
         }
+    
+        /* Button styles */
+        .w {
+            background-color: #ff004f;
+            
+            color: white;
+            border-color: #ff004f;
+        }
+    
+        .w:hover,
+        .w:focus {
+            background-color: #d90046;
+            border-color: #d90046;
+        }
     </style>
+    
 </head>
 <body>
     <div class="container">
-        <h2 class="mt-4 mb-4">Waiters Profiles</h2>
+        <h2 class="mt-4 mb-4" style="color: #ff004f;">Waiters Profiles</h2>
         <div class="search-bar">
             <input type="text" id="searchInput" class="form-control" placeholder="Search waiters by name or restaurant..." onkeyup="searchWaiters()">
         </div>
@@ -90,8 +119,8 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-  <script>
-        const firebaseConfig = {
+    <script>
+         const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
             authDomain: "digitaltipping.firebaseapp.com",
             projectId: "digitaltipping",
@@ -121,10 +150,10 @@
                         <p>Average Rating: <span id="averageRating-${doc.id}">Loading...</span></p>
                         <div id="paymentButtons-${doc.id}"></div>
                         <div class="mt-2">
-                            <button onclick="showTipModal('${waiter.paymentid}', '${doc.id}')">Send Tip</button>
-                            <button onclick="toggleMessageForm('${doc.id}')">Send Message</button>
-                            <button onclick="giveReview('${doc.id}')">Give Review</button>
-                            <button onclick="showReviews('${doc.id}')">Show Reviews</button>
+                            <button class="w" onclick="showTipModal('${waiter.paymentid}', '${doc.id}')">Send Tip</button>
+                            <button class="w" onclick="toggleMessageForm('${doc.id}')">Send Message</button>
+                            <button class="w" onclick="giveReview('${doc.id}')">Give Review</button>
+                            <button class="w" onclick="showReviews('${doc.id}')">Show Reviews</button>
                         </div>
                         
                         <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
@@ -302,6 +331,7 @@
 
 
         document.addEventListener('DOMContentLoaded', fetchWaitersWithPhotos);
+
     </script>
 </body>
 </html>
