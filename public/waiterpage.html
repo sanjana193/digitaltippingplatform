@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,7 @@
             background-color: #000000;
             color: #fff;
         }
-    
+
         .waiter-card {
             border: 1px solid #ccc;
             border-radius: 8px;
@@ -19,75 +20,77 @@
             width: 300px;
             background-color: #333;
         }
-    
+
         .profile-pic {
             width: 100%;
             height: auto;
             border-radius: 8px;
         }
-    
+
         .search-bar {
             margin: 20px 0;
         }
-    
+
         .message-form {
             display: none;
             margin-top: 10px;
         }
-    
+
         .payment-form {
             margin-top: 10px;
         }
-    
+
         #video {
             width: 100%;
             max-width: 300px;
             margin: 10px auto;
             display: none;
         }
-    
+
         #qrCanvas {
             width: 200px;
             height: 200px;
             margin: 20px auto;
             display: none;
         }
-    
+
         .reviews-list {
             margin-top: 10px;
         }
-    
+
         .rating-input {
             margin-bottom: 10px;
         }
-    
+
         /* Button styles */
         .w {
             background-color: #ff004f;
-            
             color: white;
             border-color: #ff004f;
         }
-    
+
         .w:hover,
         .w:focus {
             background-color: #d90046;
             border-color: #d90046;
         }
     </style>
-    
+
 </head>
+
 <body>
     <div class="container">
         <h2 class="mt-4 mb-4" style="color: #ff004f;">Waiters Profiles</h2>
         <div class="search-bar">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search waiters by name or restaurant..." onkeyup="searchWaiters()">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search waiters by name or restaurant..."
+                onkeyup="searchWaiters()">
         </div>
         <div id="waitersList" class="row"></div>
     </div>
 
     <!-- QR Code Modal -->
-    <div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="qrCodeModal" tabindex="-1" role="dialog" aria-labelledby="qrCodeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -120,7 +123,7 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <script>
-         const firebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
             authDomain: "digitaltipping.firebaseapp.com",
             projectId: "digitaltipping",
@@ -136,10 +139,23 @@
         function fetchWaitersWithPhotos() {
             const waitersList = document.getElementById('waitersList');
             waitersList.innerHTML = '';
-            db.collection('waiters').get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
+
+            db.collection('waiters').get().then(async (querySnapshot) => {
+                const waiters = [];
+                for (const doc of querySnapshot.docs) {
                     const waiter = doc.data();
-                    const profilePicPath = waiter.profile;
+                    waiter.id = doc.id;
+                    const averageRating = await fetchAverageRating(waiter.id);
+                    waiter.averageRating = averageRating;
+                    waiters.push(waiter);
+                }
+
+                // Sort waiters by average rating in descending order
+                waiters.sort((a, b) => b.averageRating - a.averageRating);
+
+                // Display sorted waiters
+                waiters.forEach((waiter) => {
+                    const profilePicPath = waiter.profile || 'default-profile-pic.jpg'; // Replace with default profile pic path
                     const waiterCard = document.createElement('div');
                     waiterCard.classList.add('waiter-card', 'col-md-4');
                     waiterCard.innerHTML = `
@@ -147,25 +163,21 @@
                         <h3>${waiter.name}</h3>
                         <p>Email: ${waiter.email}</p>
                         <p>Restaurant: <a href="${waiter.restaurantLink}" target="_blank">${waiter.restaurant || 'Restaurant Name Not Provided'}</a></p>
-                        <p>Average Rating: <span id="averageRating-${doc.id}">Loading...</span></p>
-                        <div id="paymentButtons-${doc.id}"></div>
+                        <p>Overall Rating(0-5): <span id="averageRating-${waiter.id}">${waiter.averageRating}</span></p>
+                        <div id="paymentButtons-${waiter.id}"></div>
                         <div class="mt-2">
-                            <button class="w" onclick="showTipModal('${waiter.paymentid}', '${doc.id}')">Send Tip</button>
-                            <button class="w" onclick="toggleMessageForm('${doc.id}')">Send Message</button>
-                            <button class="w" onclick="giveReview('${doc.id}')">Give Review</button>
-                            <button class="w" onclick="showReviews('${doc.id}')">Show Reviews</button>
+                            <button class="w" onclick="showTipModal('${waiter.paymentid}', '${waiter.id}')">Send Tip</button>
+                            <button class="w" onclick="toggleMessageForm('${waiter.id}')">Send Message</button>
+                            <button class="w" onclick="giveReview('${waiter.id}')">Give Review</button>
+                            <button class="w" onclick="showReviews('${waiter.id}')">Show Reviews</button>
                         </div>
-                        
-                        <form id="messageForm-${doc.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
+                        <form id="messageForm-${waiter.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
                             <textarea name="message" class="form-control mb-2" rows="3" placeholder="Type your message here" required></textarea>
                             <button type="submit" class="btn btn-primary">Send</button>
                         </form>
-                        <div id="reviews-${doc.id}" class="reviews-list"></div>
+                        <div id="reviews-${waiter.id}" class="reviews-list"></div>
                     `;
                     waitersList.appendChild(waiterCard);
-
-                    // Fetch and display average rating
-                    fetchAverageRating(doc.id);
                 });
             }).catch((error) => {
                 console.error('Error fetching waiters with profile photos: ', error);
@@ -263,7 +275,7 @@
             key: 'rzp_test_ZSzFKZBuOxUtdl', // Replace with your Razorpay API key
             amount: amount * 100, // Razorpay requires amount in paisa
             currency: 'INR',
-            name: 'Your Restaurant Name',
+            name: 'Tipsmart',
             description: 'Payment for Tip',
             image: 'https://your-restaurant-logo-url.com/logo.png', // Optional
             order_id: '', // You can create an order_id server-side and pass it here
@@ -293,40 +305,34 @@
 
 
 
-        function searchWaiters() {
-            const input = document.getElementById('searchInput');
-            const filter = input.value.toLowerCase();
-            const waiterCards = document.getElementsByClassName('waiter-card');
-            Array.from(waiterCards).forEach(card => {
-                const name = card.querySelector('h3').innerText.toLowerCase();
-                const restaurant = card.querySelector('p a').innerText.toLowerCase();
-                if (name.includes(filter) || restaurant.includes(filter)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
+        async function fetchAverageRating(waiterId) {
+            const reviewsSnapshot = await db.collection('reviews').where('waiterId', '==', waiterId).get();
+            const reviews = reviewsSnapshot.docs.map(doc => doc.data());
+            if (reviews.length === 0) return 'No reviews';
+
+            const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+            return (totalRating / reviews.length).toFixed(2);
         }
 
         function giveReview(waiterId) {
-            const review = prompt('Enter your review:');
-            if (review) {
-                const rating = prompt('Enter your rating (0-10):');
-                const ratingValue = parseInt(rating);
-                if (!isNaN(ratingValue) && ratingValue >= 0 && ratingValue <= 10) {
-                    db.collection('waiters').doc(waiterId).collection('reviews').add({
-                        review: review,
-                        rating: ratingValue,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        alert('Review submitted successfully.');
-                        fetchAverageRating(waiterId);
-                    }).catch((error) => {
-                        console.error('Error submitting review: ', error);
-                    });
-                } else {
-                    alert('Invalid rating. Please enter a number between 0 and 10.');
-                }
+            const review = prompt("Please enter your review:");
+            const rating = parseInt(prompt("Please enter a rating (1-5):"), 10);
+
+            if (review && rating >= 1 && rating <= 5) {
+                db.collection('reviews').add({
+                    waiterId,
+                    review,
+                    rating,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }).then(() => {
+                    alert('Review submitted successfully.');
+                    fetchWaitersWithPhotos(); // Update the waiters list with new ratings
+                }).catch(error => {
+                    console.error('Error submitting review:', error);
+                    alert('Error submitting review. Please try again.');
+                });
+            } else {
+                alert("Invalid review or rating. Please try again.");
             }
         }
 
@@ -339,6 +345,7 @@
                     const reviewItem = document.createElement('div');
                     reviewItem.classList.add('review-item');
                     reviewItem.innerHTML = `
+                    
                         <p>${reviewData.review}</p>
                         <p>Rating: ${reviewData.rating}</p>
                         <p>Date: ${new Date(reviewData.timestamp.toDate()).toLocaleString()}</p>
@@ -350,38 +357,36 @@
             });
         }
 
-        function fetchAverageRating(waiterId) {
-            db.collection('waiters').doc(waiterId).collection('reviews').get().then((querySnapshot) => {
-                let totalRating = 0;
-                let reviewCount = 0;
-                querySnapshot.forEach((doc) => {
-                    totalRating += doc.data().rating;
-                    reviewCount++;
-                });
-                const averageRating = reviewCount > 0 ? (totalRating / reviewCount).toFixed(1) : 'No ratings yet';
-                document.getElementById(`averageRating-${waiterId}`).innerText = averageRating;
-            }).catch((error) => {
-                console.error('Error calculating average rating: ', error);
-            });
-        }
 
-        function sendMessage(event, email) {
+        function sendMessage(event, recipientEmail) {
             event.preventDefault();
+
             const form = event.target;
-            const message = form.elements.message.value;
+            const message = form.message.value;
 
-            // Construct the mailto URL with email and message
-            const mailtoUrl = `mailto:${email}?subject=Message%20from%20Customer&body=${encodeURIComponent(message)}`;
-
-            // Open the default email client
-            window.location.href = mailtoUrl;
-
-            form.reset(); // Reset form after submission
+            const mailtoLink = `mailto:${recipientEmail}?subject=Message from EasyTip&body=${encodeURIComponent(message)}`;
+            window.location.href = mailtoLink;
         }
 
+        function searchWaiters() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toUpperCase();
+            const waitersList = document.getElementById('waitersList');
+            const waiterCards = waitersList.getElementsByClassName('waiter-card');
+
+            for (const card of waiterCards) {
+                const name = card.querySelector('h3').textContent.toUpperCase();
+                const restaurant = card.querySelector('a').textContent.toUpperCase();
+                if (name.includes(filter) || restaurant.includes(filter)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', fetchWaitersWithPhotos);
-
     </script>
 </body>
+
 </html>
