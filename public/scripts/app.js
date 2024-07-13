@@ -62,7 +62,7 @@ function logout() {
   auth.signOut().then(() => {
       console.log('User signed out.');
       // Redirect to sign-in page
-      window.location.href = 'signin.html';
+      window.location.href = 'index.html';
   }).catch((error) => {
       console.error('Error signing out: ', error);
   });
