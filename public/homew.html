@@ -144,33 +144,55 @@
         .feature {
             padding: 20px;
             background-color: #111;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            border-radius: 50%;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 200px;
+            height: 200px;
         }
 
         .feature i {
             margin-bottom: 15px;
+            background-color: #fff;
+            color: #ff004f;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
         }
 
         .feature h3 {
-            font-size: 24px;
-            margin-bottom: 15px;
+            font-size: 18px;
+            margin-bottom: 10px;
+            width: 100%;
+            text-align: center;
         }
 
         .feature p {
-            font-size: 16px;
+            font-size: 14px;
+            text-align: center;
         }
 
         .container .row {
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-around;
+            justify-content: center;
         }
 
         .col-lg-4 {
-            flex: 0 0 30%;
-            max-width: 30%;
+            flex: 0 0 33%;
+            max-width: 33%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
         @media (max-width: 768px) {
@@ -199,9 +221,9 @@
             <h3 id="user-name">User Name</h3>
             <p id="user-email">user@example.com</p>
             <div class="points" id="points">
-                Points Earned: 0
+                Points Earned: 120
             </div>
-            <a href="editprofile.html" class="edit-profile">Edit Profile</a>
+            <a href="#" class="edit-profile">Edit Profile</a>
             <a href="#" class="logout">Log Out</a>
         </div>
     </div>
@@ -228,33 +250,29 @@
 
     <section id="features">
         <div class="container">
-            <h2>Features</h2>
+            <h2 class="text-center">Features</h2>
             <div class="row">
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-4">
                     <div class="feature text-center">
-                        <i class="fas fa-mobile-alt fa-3x mb-3" style="color: #ff004f;"></i>
+                        <i class="fas fa-mobile-alt"></i>
                         <h3>Mobile Friendly</h3>
-                        <p>Our platform is optimized for mobile devices, ensuring a smooth and user-friendly experience for both customers and wait staff.</p>
                     </div>
                 </div>
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-4">
                     <div class="feature text-center">
-                        <i class="fas fa-shield-alt fa-3x mb-3" style="color: #ff004f;"></i>
+                        <i class="fas fa-shield-alt"></i>
                         <h3>Secure Transactions</h3>
-                        <p>We prioritize security with secure payment gateways to protect your transactions and personal information.</p>
                     </div>
                 </div>
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-4">
                     <div class="feature text-center">
-                        <i class="fas fa-star fa-3x mb-3" style="color: #ff004f;"></i>
+                        <i class="fas fa-star"></i>
                         <h3>Ratings & Reviews</h3>
-                        <p>Customers can leave ratings and reviews, helping others choose their favorite restaurants and wait staff.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-
     <section id="testimonials" class="testimonial">
         <div class="container">
             <h2>Testimonials</h2>
@@ -268,12 +286,13 @@
         <div class="container">
             <h2>Contact Us</h2>
             <p>Have questions or feedback? Reach out to us!</p>
-            <form id="contactForm">
+            <form name="submit-to-google-sheet">
                 <input type="text" id="name" name="name" placeholder="Your Name" required>
                 <input type="email" id="email" name="email" placeholder="Your Email" required>
                 <textarea id="message" name="message" rows="4" placeholder="Your Message" required></textarea>
                 <button type="submit" class="btn btn-primary">Send Message</button>
             </form>
+            <span id="msg"></span>
         </div>
     </section>
 
@@ -291,6 +310,25 @@
         document.getElementById('close-btn').addEventListener('click', function() {
             document.getElementById('profile-slide-menu').classList.remove('active');
         });
+    </script>
+    
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbyB4LC_S_9Tk_8ZV5fsa7oGX1I3ZnhN0DBmKIv5KceB7lnpk-kI0bQ17gVo332wAeRb8Q/exec'
+        const form = document.forms['submit-to-google-sheet']
+        const msg = document.getElementById("msg")
+
+        form.addEventListener('submit', e => {
+            e.preventDefault()
+            fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+                .then(response => {
+                    msg.innerHTML = "Message sent successfully"
+                    setTimeout(function(){
+                        msg.innerHTML = ""
+                    },5000)
+                    form.reset()
+                })
+                .catch(error => console.error('Error!', error.message))
+        })
     </script>
 </body>
 </html>
