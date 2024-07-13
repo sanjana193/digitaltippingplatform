@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redeem Page</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000000;
+            color: #fff;
+            padding-top: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+        }
+
+        .loyalty-points {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ff004f;
+        }
+
+        .restaurant-details {
+            margin-bottom: 20px;
+        }
+
+        .restaurant-name {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+
+        .restaurant-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .coupon-vouchers {
+            margin-bottom: 20px;
+        }
+
+        .voucher-item {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .voucher-item h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+
+        .redeem-button {
+            background-color: #ff004f;
+            color: #fff;
+            border-color: #ff004f;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .redeem-button:hover,
+        .redeem-button:focus {
+            background-color: #d90046;
+            border-color: #d90046;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loyalty-points">
+            Loyalty Points: 100
+        </div>
+        <div class="restaurant-details">
+            <h2 class="restaurant-name">Restaurant Name</h2>
+            <img src="restaurant-image.jpg" alt="Restaurant Image" class="restaurant-image">
+        </div>
+        <div class="coupon-vouchers">
+            <div class="voucher-item">
+                <h4>Coupon 1</h4>
+                <p>Description of Coupon 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                <button class="redeem-button">Redeem</button>
+            </div>
+            <div class="voucher-item">
+                <h4>Coupon 2</h4>
+                <p>Description of Coupon 2. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+                <button class="redeem-button">Redeem</button>
+            </div>
+            <div class="voucher-item">
+                <h4>Coupon 3</h4>
+                <p>Description of Coupon 3. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+                <button class="redeem-button">Redeem</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

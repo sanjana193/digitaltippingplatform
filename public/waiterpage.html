@@ -247,15 +247,50 @@
         }
 
         function simulatePayment(qrData) {
-            // Simulate payment process
-            console.log('Simulating payment process for QR data:', qrData);
-            alert('Simulating payment process for QR data: ' + qrData);
-            // Implement your actual payment logic here
-            const upiLink = qrData; // Assuming qrData is the UPI payment link scanned from the QR code
+    // Split QR data into individual UPI links
+    const upiLinks = qrData.split('\n'); // Assuming QR data is newline separated UPI links
 
-// Open the UPI payment link in a new window (for web applications)
-               window.open(upiLink);
-   }
+    upiLinks.forEach(upiLink => {
+        // Extract payment details from UPI link
+        const params = new URLSearchParams(upiLink.replace('upi://pay?', ''));
+        const paymentId = params.get('pa');
+        const amount = params.get('am');
+
+        // Check if paymentId and amount are valid (validate as needed)
+
+        // Create Razorpay checkout options
+        const options = {
+            key: 'rzp_test_ZSzFKZBuOxUtdl', // Replace with your Razorpay API key
+            amount: amount * 100, // Razorpay requires amount in paisa
+            currency: 'INR',
+            name: 'Your Restaurant Name',
+            description: 'Payment for Tip',
+            image: 'https://your-restaurant-logo-url.com/logo.png', // Optional
+            order_id: '', // You can create an order_id server-side and pass it here
+            handler: function (response) {
+                // Handle success callback
+                alert('Payment successful: ' + response.razorpay_payment_id);
+                // You can perform additional actions like updating payment status in your database
+            },
+            prefill: {
+                name: 'Customer Name', // Optional customer details
+                email: 'customer@example.com',
+                contact: '+919876543210',
+            },
+            notes: {
+                // Optional notes to include with the order
+            },
+            theme: {
+                color: '#ff004f' // Razorpay checkout theme color
+            }
+        };
+
+        // Open Razorpay checkout modal
+        const rzp = new Razorpay(options);
+        rzp.open();
+    });
+}
+
 
 
         function searchWaiters() {

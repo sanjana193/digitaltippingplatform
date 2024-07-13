@@ -8,9 +8,11 @@
   },
   "dependencies": {
     "@zxing/library": "^0.21.2",
+    "body-parser": "^1.20.2",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "firebase-admin": "^12.2.0",
+    "razorpay": "^2.9.4",
     "uuid": "^10.0.0"
   }
 }
