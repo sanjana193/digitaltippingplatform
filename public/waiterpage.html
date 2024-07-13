@@ -322,21 +322,23 @@
                 reviewsDiv.innerHTML = '<p>Error fetching reviews</p>';
             });
         }
-
-        function sendMessage(event, recipientEmail) {
+        function sendMessage(event, email) {
             event.preventDefault();
             const form = event.target;
-            const message = form.message.value.trim();
-            if (message === '') {
-                alert('Please enter a message.');
-                return;
-            }
+            const message = form.elements.message.value;
 
-            // Here you can implement sending messages via Firebase Cloud Messaging (FCM) or other services.
-            console.log('Sending message to: ', recipientEmail, ' Message: ', message);
-            form.reset();
-            toggleMessageForm(recipientEmail.split('@')[0]); // Example: Toggle message form for 'recipientEmail'
+            // Construct the mailto URL with email and message
+            const mailtoUrl = `mailto:${email}?subject=Message%20from%20Customer&body=${encodeURIComponent(message)}`;
+
+            // Open the default email client
+            window.location.href = mailtoUrl;
+
+            form.reset(); // Reset form after submission
         }
+
+
+
+
 
         function searchWaiters() {
             const searchInput = document.getElementById('searchInput').value.toLowerCase();

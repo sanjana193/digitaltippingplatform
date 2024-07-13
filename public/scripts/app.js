@@ -57,3 +57,19 @@ auth.onAuthStateChanged(function(user) {
     console.log("No user signed in.");
   }
 });
+
+function logout() {
+  auth.signOut().then(() => {
+      console.log('User signed out.');
+      // Redirect to sign-in page
+      window.location.href = 'signin.html';
+  }).catch((error) => {
+      console.error('Error signing out: ', error);
+  });
+}
+
+// Add event listener to logout button
+document.querySelector('.logout').addEventListener('click', (e) => {
+  e.preventDefault();
+  logout();
+});
