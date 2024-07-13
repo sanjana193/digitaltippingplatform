@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login/Signup Form</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta2/css/all.min.css">
+    <style>
+        /* Your existing styles here */
+        body {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 300;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #c4c3ca;
+            background-color: #1f2029;
+            overflow-x: hidden;
+        }
+
+        .full-height {
+            min-height: 100vh;
+        }
+
+        .card-3d-wrap {
+            position: relative;
+            width: 440px;
+            max-width: 100%;
+            height: 400px;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            margin-top: 60px;
+        }
+
+        .card-3d-wrapper {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card-front, .card-back {
+            width: 100%;
+            height: 100%;
+            background-color: #2a2b38;
+            background-image: url('https://s3-us-west-2.amazonaws.com/s.cdpn.io/1462889/pat.svg');
+            background-position: bottom center;
+            background-repeat: no-repeat;
+            background-size: 300%;
+            position: absolute;
+            border-radius: 6px;
+            left: 0;
+            top: 0;
+            backface-visibility: hidden;
+        }
+
+        .card-front {
+            transform: rotateY(0deg);
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        .checkbox:checked ~ .card-3d-wrap .card-3d-wrapper {
+            transform: rotateY(180deg);
+        }
+
+        .center-wrap {
+            position: absolute;
+            width: 100%;
+            padding: 0 35px;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            z-index: 20;
+            display: block;
+        }
+
+        .form-group {
+            position: relative;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+
+        .form-style {
+            padding: 13px 20px;
+            padding-left: 55px;
+            height: 48px;
+            width: 100%;
+            font-weight: 500;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 22px;
+            letter-spacing: 0.5px;
+            outline: none;
+            color: #c4c3ca;
+            background-color: #1f2029;
+            border: none;
+            transition: all 200ms linear;
+            box-shadow: 0 4px 8px 0 rgba(21,21,21,.2);
+        }
+
+        .form-style:focus,
+        .form-style:active {
+            border: none;
+            outline: none;
+            box-shadow: 0 4px 8px 0 rgba(21,21,21,.2);
+        }
+
+        .input-icon {
+            position: absolute;
+            top: 0;
+            left: 18px;
+            height: 48px;
+            font-size: 24px;
+            line-height: 48px;
+            text-align: left;
+            color: #ff004f;
+            transition: all 200ms linear;
+        }
+
+        .btn {
+            border-radius: 4px;
+            height: 44px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            transition: all 200ms linear;
+            padding: 0 30px;
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: none;
+            background-color: #ff004f;
+            color: #ffffff;
+            box-shadow: 0 8px 24px 0 rgba(255,0,79,.2);
+        }
+
+        .btn:active,
+        .btn:focus {
+            background-color: #ff004f;
+            color: #ffffff;
+            box-shadow: 0 8px 24px 0 rgba(255,0,79,.2);
+        }
+
+        .btn:hover {
+            background-color: #ff3366;
+            color: #ffffff;
+            box-shadow: 0 8px 24px 0 rgba(255,0,79,.2);
+        }
+
+        .link {
+            color: #ff004f;
+            text-decoration: none;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .form-style[readonly] {
+            padding-left: 55px;
+        }
+        /* Additional styles for new elements */
+        .profile-section {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .profile-section input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row full-height justify-content-center align-items-center">
+            <div class="col-12 text-center">
+                <div class="section pb-5 pt-5 pt-sm-2 text-center">
+                    <h6 class="mb-0 pb-3"><span>Log In</span>/<span>Sign Up</span></h6>
+                    <input class="checkbox" type="checkbox" id="reg-log" name="reg-log" />
+                    <label for="reg-log"></label>
+                    <div class="card-3d-wrap mx-auto">
+                        <div class="card-3d-wrapper">
+                            <div class="card-front">
+                                <div class="center-wrap">
+                                    <div class="section text-center">
+                                        <h4 class="mb-4 pb-3">Log In</h4>
+                                        <div class="form-group">
+                                            <input type="email" name="logemail" class="form-style" placeholder="Your Email" id="logemail" autocomplete="off">
+                                            <i class="input-icon fas fa-envelope"></i>
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <input type="password" name="logpass" class="form-style" placeholder="Your Password" id="logpass" autocomplete="off">
+                                            <i class="input-icon fas fa-lock"></i>
+                                        </div>
+                                        <button type="button" class="btn mt-4" onclick="login()">Log In</button>
+                                        <p class="mb-0 mt-4 text-center"><a href="#" class="link" onclick="forgotPassword()">Forgot your password?</a></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-back">
+                                <div class="center-wrap">
+                                    <div class="section text-center">
+                                        <h4 class="mb-4 pb-3">Sign Up</h4>
+                                        <div class="form-group">
+                                            <input type="text" name="name" class="form-style" placeholder="Your Full Name" id="name" autocomplete="off">
+                                            <i class="input-icon fas fa-user"></i>
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <input type="email" name="email" class="form-style" placeholder="Your Email" id="signup-email" autocomplete="off">
+                                            <i class="input-icon fas fa-envelope"></i>
+                                        </div>
+                                        <div class="form-group mt-2">
+                                            <input type="password" name="password" class="form-style" placeholder="Your Password" id="signup-password" autocomplete="off">
+                                            <i class="input-icon fas fa-lock"></i>
+                                        </div>
+                                        <button type="button" class="btn mt-4" id="send-otp" onclick="sendEmailVerification()">Send Email Verification</button>
+                                        <div class="profile-section">
+                                            <input type="text" name="address" class="form-style" placeholder="Your Address" id="address" autocomplete="off">
+                                            <input type="url" name="profilePhoto" class="form-style" placeholder="Profile Photo URL" id="profile-photo" autocomplete="off">
+                                        </div>
+                                        <button type="button" class="btn mt-4" id="signup-button" style="display: none;" onclick="verifyAndRedirect()">Sign Up</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
+    <script>
+        // Initialize Firebase
+        var firebaseConfig = {
+            apiKey: "AIzaSyANFMLhxnMiKWiW_TeV_2irswBONJogux8",
+            authDomain: "digitaltipping.firebaseapp.com",
+            projectId: "digitaltipping",
+            storageBucket: "digitaltipping.appspot.com",
+            messagingSenderId: "1028902624608",
+            appId: "1:1028902624608:web:101410a2bbd20316701205",
+            measurementId: "G-HHTG6R4CH6"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Function to send email verification link
+        function sendEmailVerification() {
+            var email = document.getElementById('signup-email').value;
+            var password = document.getElementById('signup-password').value;
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Send email verification link
+                    return userCredential.user.sendEmailVerification();
+                })
+                .then(() => {
+                    // Email verification link sent successfully
+                    alert('Verification email sent. Please verify your email before signing in.');
+                    document.getElementById('send-otp').style.display = 'none';
+                    document.getElementById('signup-button').style.display = 'inline-block';
+                    document.querySelector('.profile-section').style.display = 'block'; // Show additional fields
+                })
+                .catch((error) => {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    console.error('Firebase Error:', errorCode, errorMessage);
+                    alert(errorMessage);
+                });
+        }
+
+        // Function to verify email and redirect user
+        function verifyAndRedirect() {
+            var email = document.getElementById('signup-email').value;
+            var password = document.getElementById('signup-password').value;
+            var name = document.getElementById('name').value;
+            var address = document.getElementById('address').value;
+            var profilePhoto = document.getElementById('profile-photo').value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    var user = userCredential.user;
+                    if (user.emailVerified) {
+                        // Add user data to Firestore
+                        db.collection("users").doc(user.uid).set({
+                            name: name,
+                            email: email,
+                            loyaltyPoints: 0,
+                            address: address,
+                            profilePhoto: profilePhoto
+                        }).then(() => {
+                            alert('Email verified. Redirecting to home page.');
+                            window.location.href = 'homew.html';
+                        }).catch((error) => {
+                            console.error('Error writing document: ', error);
+                            alert('Error writing document: ' + error.message);
+                        });
+                    } else {
+                        alert('Please verify your email before proceeding.');
+                    }
+                })
+                .catch((error) => {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    console.error('Firebase Error:', errorCode, errorMessage);
+                    alert(errorMessage);
+                });
+        }
+
+        // Function to log in user
+        function login() {
+            var email = document.getElementById('logemail').value;
+            var password = document.getElementById('logpass').value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Logged in successfully
+                    var user = userCredential.user;
+                    if (user.emailVerified) {
+                        window.location.href = 'homew.html';
+                    } else {
+                        alert('Please verify your email before logging in.');
+                        auth.signOut();
+                    }
+                })
+                .catch((error) => {
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+                    console.error('Firebase Error:', errorCode, errorMessage);
+                    alert(errorMessage);
+                });
+        }
+
+        // Function to handle forgot password
+        function forgotPassword() {
+            var email = prompt('Please enter your email to receive a password reset link:');
+            if (email !== null && email !== '') {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => {
+                        alert('Password reset email sent. Please check your email.');
+                    })
+                    .catch((error) => {
+                        var errorCode = error.code;
+                        var errorMessage = error.message;
+                        console.error('Firebase Error:', errorCode, errorMessage);
+                        alert(errorMessage);
+                    });
+            }
+        }
+    </script>
+</body>
+</html>
