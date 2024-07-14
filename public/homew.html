@@ -10,11 +10,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/b8d78448e3.js" crossorigin="anonymous"></script>
-   
+
     <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-storage-compat.js"></script>
-     <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore-compat.js"></script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -144,55 +144,38 @@
         .feature {
             padding: 20px;
             background-color: #111;
-            border-radius: 50%;
+            border-radius: 8px;
+            margin-bottom: 20px;
             text-align: center;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
-            width: 200px;
-            height: 200px;
+            justify-content: center;
+            height: 100%;
         }
 
         .feature i {
             margin-bottom: 15px;
-            background-color: #fff;
-            color: #ff004f;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
         }
 
         .feature h3 {
-            font-size: 18px;
-            margin-bottom: 10px;
-            width: 100%;
-            text-align: center;
+            font-size: 24px;
+            margin-bottom: 15px;
         }
 
         .feature p {
-            font-size: 14px;
-            text-align: center;
+            font-size: 16px;
         }
 
         .container .row {
             display: flex;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: space-around;
         }
 
         .col-lg-4 {
-            flex: 0 0 33%;
-            max-width: 33%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            flex: 0 0 30%;
+            max-width: 30%;
         }
 
         @media (max-width: 768px) {
@@ -220,14 +203,10 @@
             <img src="images/profile.jpg" alt="User Profile Picture" id="profile-photo">
             <h3 id="user-name">User Name</h3>
             <p id="user-email">user@example.com</p>
-<<<<<<< HEAD
-            <div class="points" id="loyaltyPoints">
-=======
             <div class="points" id="points">
->>>>>>> f7921fef74db3c56689617131255872602fa9342
-                Points Earned: 0
+                Points Earned: 120
             </div>
-            <a href="editprofile.html" class="edit-profile">Edit Profile</a>
+            <a href="#" class="edit-profile">Edit Profile</a>
             <a href="#" class="logout">Log Out</a>
         </div>
     </div>
@@ -254,35 +233,39 @@
 
     <section id="features">
         <div class="container">
-            <h2 class="text-center">Features</h2>
+            <h2>Features</h2>
             <div class="row">
-                <div class="col-lg-4">
-                    <div class="feature text-center">
-                        <i class="fas fa-mobile-alt"></i>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-box">
+                        <i class="fas fa-mobile-alt fa-3x mb-3" style="color: #ff004f;"></i>
                         <h3>Mobile Friendly</h3>
+                        <p>Our platform is optimized for mobile devices, ensuring a smooth and user-friendly experience for both customers and wait staff.</p>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="feature text-center">
-                        <i class="fas fa-shield-alt"></i>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-box">
+                        <i class="fas fa-shield-alt fa-3x mb-3" style="color: #ff004f;"></i>
                         <h3>Secure Transactions</h3>
+                        <p>We prioritize security with secure payment gateways to protect your transactions and personal information.</p>
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    <div class="feature text-center">
-                        <i class="fas fa-star"></i>
+                <div class="col-lg-4 mb-4">
+                    <div class="feature-box">
+                        <i class="fas fa-star fa-3x mb-3" style="color: #ff004f;"></i>
                         <h3>Ratings & Reviews</h3>
+                        <p>Customers can leave ratings and reviews, helping others choose their favorite restaurants and wait staff.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
     <section id="testimonials" class="testimonial">
         <div class="container">
             <h2>Testimonials</h2>
             <p>"EasyTip has made it so much easier for me to receive tips from my customers. I love how simple and efficient the process is!" - Sarah J.</p>
             <p>"As a customer, I appreciate being able to tip my favorite waiters directly from my phone. EasyTip is a game changer!" - Michael R.</p>
-        
+            <p>"EasyTip's secure transactions give me peace of mind when tipping my favorite staff members. Highly recommended!" - Emily T.</p>
         </div>
     </section>
 
@@ -333,6 +316,38 @@
                 })
                 .catch(error => console.error('Error!', error.message))
         })
+    </script>
+
+    <!-- Firebase logout script -->
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Log out function
+        function logout() {
+            auth.signOut().then(() => {
+                console.log('User signed out.');
+                // Redirect to sign-in page
+                window.location.href = 'signin.html';
+            }).catch((error) => {
+                console.error('Error signing out: ', error);
+            });
+        }
+
+        // Add event listener to logout button
+        document.querySelector('.logout').addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
     </script>
 </body>
 </html>
