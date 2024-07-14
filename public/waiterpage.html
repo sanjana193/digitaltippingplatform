@@ -163,13 +163,13 @@
                         <h3>${waiter.name}</h3>
                         <p>Email: ${waiter.email}</p>
                         <p>Restaurant: <a href="${waiter.restaurantLink}" target="_blank">${waiter.restaurant || 'Restaurant Name Not Provided'}</a></p>
-                        <p>Overall Rating(0-5): <span id="averageRating-${waiter.id}">${waiter.averageRating}</span></p>
+                        <p>Overall Rating: <span id="averageRating-${waiter.id}">${waiter.averageRating}</span></p>
                         <div id="paymentButtons-${waiter.id}"></div>
                         <div class="mt-2">
                             <button class="w" onclick="showTipModal('${waiter.paymentid}', '${waiter.id}')">Send Tip</button>
                             <button class="w" onclick="toggleMessageForm('${waiter.id}')">Send Message</button>
                             <button class="w" onclick="giveReview('${waiter.id}')">Give Review</button>
-                            <button class="w" onclick="showReviews('${waiter.id}')">Show Reviews</button>
+                            
                         </div>
                         <form id="messageForm-${waiter.id}" class="message-form" onsubmit="sendMessage(event, '${waiter.email}')">
                             <textarea name="message" class="form-control mb-2" rows="3" placeholder="Type your message here" required></textarea>
@@ -271,35 +271,43 @@
         // Check if paymentId and amount are valid (validate as needed)
 
         // Create Razorpay checkout options
-        const options = {
-            key: 'rzp_test_ZSzFKZBuOxUtdl', // Replace with your Razorpay API key
-            amount: amount * 100, // Razorpay requires amount in paisa
-            currency: 'INR',
-            name: 'Tipsmart',
-            description: 'Payment for Tip',
-            image: 'https://your-restaurant-logo-url.com/logo.png', // Optional
-            order_id: '', // You can create an order_id server-side and pass it here
-            handler: function (response) {
-                // Handle success callback
-                alert('Payment successful: ' + response.razorpay_payment_id);
-                // You can perform additional actions like updating payment status in your database
-            },
-            prefill: {
-                name: 'Customer Name', // Optional customer details
-                email: 'customer@example.com',
-                contact: '+919876543210',
-            },
-            notes: {
-                // Optional notes to include with the order
-            },
-            theme: {
-                color: '#ff004f' // Razorpay checkout theme color
-            }
-        };
+  const options = {
+        key: 'rzp_test_ZSzFKZBuOxUtdl', // Replace with your Razorpay API key
+        amount: amount * 100, // Razorpay requires amount in paisa
+        currency: 'INR',
+        name: 'Tipsmart',
+        description: 'Payment for Tip',
+        image: 'https://your-restaurant-logo-url.com/logo.png', // Optional
+        handler: function (response) {
+            alert('Payment successful: ' + response.razorpay_payment_id);
 
-        // Open Razorpay checkout modal
-        const rzp = new Razorpay(options);
-        rzp.open();
+            const loyaltyPoints = amount * 0.05;
+
+            db.collection('users').doc(userId).update({
+                loyaltyPoints: firebase.firestore.FieldValue.increment(loyaltyPoints)
+            }).then(() => {
+                alert('Loyalty points updated successfully.');
+                const loyaltyPointsElement = document.getElementById('loyaltyPoints');
+                const currentPoints = parseFloat(loyaltyPointsElement.textContent.split(': ')[1]);
+                loyaltyPointsElement.textContent = `Points Earned: ${currentPoints + loyaltyPoints}`;
+            }).catch(error => {
+                console.error('Error updating loyalty points:', error);
+                alert('Error updating loyalty points. Please try again.');
+            });
+        },
+        prefill: {
+            name: 'Customer Name',
+            email: 'customer@example.com',
+            contact: '+919876543210',
+        },
+        notes: {},
+        theme: {
+            color: '#ff004f'
+        }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
     });
 }
 
@@ -315,47 +323,28 @@
         }
 
         function giveReview(waiterId) {
-            const review = prompt("Please enter your review:");
+            
             const rating = parseInt(prompt("Please enter a rating (1-5):"), 10);
 
-            if (review && rating >= 1 && rating <= 5) {
+            if ( rating >= 1 && rating <= 5) {
                 db.collection('reviews').add({
                     waiterId,
-                    review,
+                    
                     rating,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => {
-                    alert('Review submitted successfully.');
+                    alert('Rating submitted successfully.');
                     fetchWaitersWithPhotos(); // Update the waiters list with new ratings
                 }).catch(error => {
-                    console.error('Error submitting review:', error);
-                    alert('Error submitting review. Please try again.');
+                    console.error('Error submitting rating:', error);
+                    alert('Error submitting rating. Please try again.');
                 });
             } else {
-                alert("Invalid review or rating. Please try again.");
+                alert("Invalid rating. Please try again.");
             }
         }
 
-        function showReviews(waiterId) {
-            const reviewsList = document.getElementById(`reviews-${waiterId}`);
-            reviewsList.innerHTML = '';
-            db.collection('waiters').doc(waiterId).collection('reviews').orderBy('timestamp', 'desc').get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    const reviewData = doc.data();
-                    const reviewItem = document.createElement('div');
-                    reviewItem.classList.add('review-item');
-                    reviewItem.innerHTML = `
-                    
-                        <p>${reviewData.review}</p>
-                        <p>Rating: ${reviewData.rating}</p>
-                        <p>Date: ${new Date(reviewData.timestamp.toDate()).toLocaleString()}</p>
-                    `;
-                    reviewsList.appendChild(reviewItem);
-                });
-            }).catch((error) => {
-                console.error('Error fetching reviews: ', error);
-            });
-        }
+       
 
 
         function sendMessage(event, recipientEmail) {

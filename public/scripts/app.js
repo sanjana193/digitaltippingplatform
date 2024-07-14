@@ -44,7 +44,7 @@ function updateProfile(userData) {
   profilePhotoElement.src = userData.profilePhoto || "images/default-profile.png";
   profileNameElement.textContent = userData.name || "Name";
   profileEmailElement.textContent = userData.email || "Email";
-  loyaltyPointsElement.textContent = userData.loyaltyPoints || "0";
+  loyaltyPointsElement.textContent = `Points Earned: ${user.loyaltyPoints || 0}`;
 }
 
 // Monitor authentication state changes
